@@ -1,0 +1,96 @@
+% Riemann Resonance Snake in w0-wa Plane
+% Shows DESI BAO constraints and the falsified Riemann prediction
+
+\begin{tikzpicture}
+    \begin{axis}[
+        width=0.95\columnwidth,
+        height=6.5cm,
+        xlabel={$w_0$},
+        ylabel={$w_a$},
+        xmin=-1.8, xmax=-0.2,
+        ymin=-2, ymax=1.5,
+        grid=major,
+        grid style={gridgray, thin},
+        legend pos=south east,
+        legend style={
+            draw=none,
+            fill=white,
+            fill opacity=0.9,
+            font=\footnotesize
+        },
+    ]
+
+    % ΛCDM point
+    \node[
+        star,
+        star points=5,
+        star point ratio=2.5,
+        fill=datablack,
+        minimum size=8pt,
+        inner sep=0pt
+    ] at (axis cs:-1, 0) {};
+    \node[anchor=south west, font=\footnotesize] at (axis cs:-0.95, 0.05) {$\Lambda$CDM};
+
+    % DESI BAO constraint ellipses at different z
+    % z = 0.3 (blue)
+    \draw[cosmoblue, thick, fill=cosmoblue, fill opacity=0.2]
+        (axis cs:-1.05, -0.3) ellipse [x radius=0.15, y radius=0.4];
+    \node[cosmoblue, font=\tiny] at (axis cs:-1.05, -0.9) {$z=0.3$};
+
+    % z = 0.5 (green)
+    \draw[astrogreen, thick, fill=astrogreen, fill opacity=0.2]
+        (axis cs:-0.95, -0.1) ellipse [x radius=0.12, y radius=0.35];
+    \node[astrogreen, font=\tiny] at (axis cs:-0.95, -0.6) {$z=0.5$};
+
+    % z = 0.7 (orange)
+    \draw[flameorange, thick, fill=flameorange, fill opacity=0.2]
+        (axis cs:-1.1, 0.2) ellipse [x radius=0.18, y radius=0.5];
+    \node[flameorange, font=\tiny] at (axis cs:-1.1, -0.45) {$z=0.7$};
+
+    % z = 1.0 (red)
+    \draw[detored, thick, fill=detored, fill opacity=0.2]
+        (axis cs:-0.85, 0.1) ellipse [x radius=0.2, y radius=0.6];
+    \node[detored, font=\tiny] at (axis cs:-0.85, -0.65) {$z=1.0$};
+
+    % Riemann snake prediction (FALSIFIED)
+    \addplot[
+        nucpurple,
+        very thick,
+        dashed,
+        smooth,
+        samples=100,
+        domain=0:6.28
+    ] ({-1 + 0.3*cos(deg(14.134725*x/6.28))},
+       {0.5*sin(deg(14.134725*x/6.28)) - 0.3*cos(deg(2*14.134725*x/6.28))});
+
+    % Label for Riemann snake
+    \node[
+        nucpurple,
+        font=\footnotesize,
+        anchor=west,
+        align=left
+    ] at (axis cs:-0.5, 1.0) {Riemann\\prediction};
+
+    % Falsification box
+    \node[
+        anchor=north east,
+        draw=detored,
+        thick,
+        fill=white,
+        fill opacity=0.95,
+        inner sep=6pt,
+        font=\small,
+        align=center
+    ] at (rel axis cs:0.98,0.98) {
+        \textbf{FALSIFIED}\\[2pt]
+        \footnotesize $\Delta\chi^2 = -24.1$\\
+        \footnotesize $> 5\sigma$ exclusion
+    };
+
+    % Arrow showing snake misses constraints
+    \draw[-{Stealth[length=2mm]}, detored, thick]
+        (axis cs:-0.65, 0.6) -- (axis cs:-0.85, 0.4)
+        node[midway, above right, font=\tiny, detored] {misses};
+
+    \end{axis}
+\end{tikzpicture}

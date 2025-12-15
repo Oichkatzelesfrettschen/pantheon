@@ -1,0 +1,120 @@
+% Nuclear Burning Network Diagram
+% Shows C12+C12 reaction channels and path to NSE
+
+\begin{tikzpicture}[
+    scale=0.85,
+    every node/.style={font=\small},
+    nucleus/.style={
+        circle,
+        draw=#1,
+        thick,
+        fill=#1!20,
+        minimum size=12mm,
+        inner sep=1pt,
+        font=\footnotesize\bfseries
+    },
+    reaction/.style={
+        -{Stealth[length=2mm]},
+        thick,
+        #1
+    },
+    qlabel/.style={
+        font=\tiny,
+        #1
+    }
+]
+
+    % Carbon-12 (reactants)
+    \node[nucleus=cosmoblue] (C12a) at (0,0) {$^{12}$C};
+    \node[nucleus=cosmoblue] (C12b) at (0,-2) {$^{12}$C};
+
+    % Fusion symbol
+    \node[font=\Large] at (1,-1) {$+$};
+
+    % Intermediate compound
+    \node[draw=datablack, thick, ellipse, minimum width=15mm, minimum height=10mm,
+          fill=gray!10] (compound) at (2.5,-1) {$^{24}$Mg$^*$};
+
+    % Reaction products
+    \node[nucleus=astrogreen] (Ne20) at (5, 0.5) {$^{20}$Ne};
+    \node[nucleus=flameorange] (alpha1) at (6.5, 0.5) {$\alpha$};
+
+    \node[nucleus=astrogreen] (Na23) at (5, -1) {$^{23}$Na};
+    \node[nucleus=nucpurple] (proton) at (6.5, -1) {p};
+
+    \node[nucleus=astrogreen] (Mg23) at (5, -2.5) {$^{23}$Mg};
+    \node[nucleus=gray] (neutron) at (6.5, -2.5) {n};
+
+    % NSE products
+    \node[nucleus=detored] (Ni56) at (9, -1) {$^{56}$Ni};
+
+    % Reaction arrows
+    \draw[reaction=cosmoblue] (C12a) -- (compound);
+    \draw[reaction=cosmoblue] (C12b) -- (compound);
+
+    \draw[reaction=astrogreen] (compound) -- (Ne20)
+        node[midway, above, qlabel=astrogreen] {$Q = +4.62$ MeV};
+    \draw[reaction=astrogreen] (Ne20) -- (alpha1);
+
+    \draw[reaction=flameorange] (compound) -- (Na23)
+        node[midway, above, qlabel=flameorange] {$Q = +2.24$ MeV};
+    \draw[reaction=flameorange] (Na23) -- (proton);
+
+    \draw[reaction=gray] (compound) -- (Mg23)
+        node[midway, below, qlabel=gray] {$Q = -2.62$ MeV};
+    \draw[reaction=gray] (Mg23) -- (neutron);
+
+    % Path to NSE
+    \draw[reaction=detored, dashed, very thick]
+        (6.8, -0.3) to[out=0, in=150] (Ni56)
+        node[midway, above, font=\tiny] {NSE};
+    \draw[reaction=detored, dashed, very thick]
+        (6.8, -1) to[out=0, in=180] (Ni56);
+    \draw[reaction=detored, dashed, very thick]
+        (6.8, -1.7) to[out=0, in=210] (Ni56);
+
+    % Energy release annotation
+    \node[
+        anchor=north west,
+        draw=detored,
+        thick,
+        fill=white,
+        inner sep=4pt,
+        font=\footnotesize,
+        align=left
+    ] at (7.5, 1.5) {
+        Total: C $\to$ NSE\\
+        $Q_\mathrm{burn} \approx 2\times10^{17}$ erg/g
+    };
+
+    % Temperature threshold
+    \node[
+        anchor=south,
+        draw=datablack,
+        fill=white,
+        inner sep=3pt,
+        font=\tiny,
+        align=center
+    ] at (2.5, -3.2) {
+        $T_\mathrm{ign} \sim 5 \times 10^8$ K\\
+        (C ignition)
+    };
+
+    \node[
+        anchor=south,
+        draw=datablack,
+        fill=white,
+        inner sep=3pt,
+        font=\tiny,
+        align=center
+    ] at (9, -3.2) {
+        $T_\mathrm{NSE} \sim 5 \times 10^9$ K\\
+        (Nuclear statistical equilibrium)
+    };
+
+    % Branching ratio labels
+    \node[astrogreen, font=\tiny] at (4.2, 0.8) {$\sim 56\%$};
+    \node[flameorange, font=\tiny] at (4.2, -0.7) {$\sim 44\%$};
+    \node[gray, font=\tiny] at (4.2, -2.2) {$< 1\%$};
+
+\end{tikzpicture}

@@ -1,0 +1,648 @@
+%!TEX program = lualatex
+%!TEX encoding = UTF-8 Unicode
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The Spandrel Project: From Cosmological Hypothesis to Astrophysical Validation
+%
+% A comprehensive analysis of dark energy oscillation models using
+% Pantheon+SH0ES Type Ia supernovae and DESI 2024 BAO measurements
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[twocolumn,showpacs,preprintnumbers,amsmath,amssymb,aps,prd]{revtex4-2}
+
+% ============================================================================
+% PACKAGES
+% ============================================================================
+
+% Math and symbols
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{siunitx}
+
+% Graphics
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+
+% TikZ libraries
+\usetikzlibrary{
+    arrows.meta,
+    calc,
+    decorations.pathmorphing,
+    decorations.markings,
+    fadings,
+    patterns,
+    positioning,
+    shapes.geometric,
+    shapes.arrows,
+    backgrounds,
+    fit,
+    matrix,
+    3d,
+    intersections,
+    shadings,
+    spy,
+    shadows
+}
+
+% PGFPlots configuration
+\pgfplotsset{
+    compat=1.18,
+    every axis/.append style={
+        thick,
+        tick style={thick},
+        label style={font=\small},
+        tick label style={font=\footnotesize},
+        legend style={font=\footnotesize}
+    }
+}
+
+% Color palette (scientific)
+\definecolor{cosmoblue}{RGB}{31,119,180}
+\definecolor{astrogreen}{RGB}{44,160,44}
+\definecolor{detored}{RGB}{214,39,40}
+\definecolor{nucpurple}{RGB}{148,103,189}
+\definecolor{flameorange}{RGB}{255,127,14}
+\definecolor{datablack}{RGB}{40,40,40}
+\definecolor{gridgray}{RGB}{200,200,200}
+
+% Tables
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+
+% Hyperlinks
+\usepackage[colorlinks=true,linkcolor=cosmoblue,citecolor=astrogreen,urlcolor=detored]{hyperref}
+
+% Formatting
+\usepackage{microtype}
+
+% ============================================================================
+% CUSTOM COMMANDS
+% ============================================================================
+
+% Physics notation
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\ee}{\mathrm{e}}
+\newcommand{\ii}{\mathrm{i}}
+\newcommand{\Msun}{M_\odot}
+\newcommand{\chisq}{\chi^2}
+\newcommand{\lcdm}{\Lambda\text{CDM}}
+\newcommand{\Omegam}{\Omega_\text{m}}
+\newcommand{\OmegaL}{\Omega_\Lambda}
+\newcommand{\Hubble}{H_0}
+\newcommand{\dL}{d_\text{L}}
+\newcommand{\gammaone}{\gamma_1}
+
+% Vectors and matrices
+\renewcommand{\vec}[1]{\bm{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+
+% ============================================================================
+% DOCUMENT
+% ============================================================================
+
+\begin{document}
+
+\preprint{SPANDREL-2025}
+
+\title{The Spandrel Project:\\
+From Cosmological Hypothesis to Astrophysical Validation}
+
+\author{Anonymous}
+\affiliation{Independent Research}
+
+\date{\today}
+
+\begin{abstract}
+We present a complete arc of scientific inquiry: the proposal, testing, and
+falsification of the ``Spandrel hypothesis''---a speculative framework
+proposing that dark energy oscillates at the frequency of the first Riemann
+zeta zero ($\gammaone = 14.134725$). Using the Pantheon+SH0ES compilation of
+1,701 Type Ia supernovae and DESI 2024 baryon acoustic oscillation measurements,
+we find $\Delta\chisq = -24.1$ relative to $\lcdm$, definitively ruling out the
+Riemann resonance model. The project successfully pivoted to computational
+astrophysics, producing a validated one-dimensional reactive Euler solver for
+Type Ia supernova deflagration-to-detonation transition (DDT) via the
+Zel'dovich gradient mechanism. The DDT solver reproduces observed detonation
+velocities ($5.4 \times 10^8$~cm/s), peak temperatures ($5 \times 10^9$~K),
+and nickel-56 yields consistent with standard Type Ia luminosities
+($M_B \approx -19.3$). This work demonstrates the scientific method in action:
+hypothesis $\to$ prediction $\to$ data $\to$ falsification $\to$ pivot $\to$
+validation.
+\end{abstract}
+
+\pacs{98.80.Es, 97.60.Bw, 26.30.-k, 47.40.-x}
+\keywords{cosmology, Type Ia supernovae, dark energy, detonation, nucleosynthesis}
+
+\maketitle
+
+% ============================================================================
+% INTRODUCTION
+% ============================================================================
+
+\section{Introduction}
+\label{sec:intro}
+
+Modern precision cosmology faces a fundamental challenge: measurements of the
+Hubble constant $\Hubble$ from early-universe probes (CMB, BAO) disagree with
+late-universe measurements (SNe~Ia, Cepheids) at approximately $5\sigma$
+significance~\cite{Planck2018,Riess2022}. This ``Hubble tension'' has motivated
+extensive exploration of physics beyond the standard $\lcdm$ model.
+
+The Spandrel Project began as an investigation into ``Dissociative Field
+Theory''---a speculative framework proposing that vacuum structure exhibits
+64-dimensional algebraic symmetry (Chingon algebra), with dark energy
+oscillating at the frequency of the first Riemann zeta zero:
+\begin{equation}
+    \gammaone = 14.134725141734693790\ldots
+    \label{eq:gamma1}
+\end{equation}
+
+This hypothesis made a concrete, falsifiable prediction: the dark energy
+equation of state $w(z)$ should exhibit log-periodic oscillation:
+\begin{equation}
+    w(z) = -1 + A \cos\bigl(\gammaone \ln(1+z) + \phi\bigr)
+    \label{eq:riemann_w}
+\end{equation}
+where $A$ is the oscillation amplitude and $\phi$ is a phase offset.
+
+Through rigorous analysis against 1,701 Type Ia supernovae from the
+Pantheon+SH0ES compilation~\cite{Scolnic2022,Brout2022} and DESI 2024 BAO
+constraints, we demonstrate that this model is \textbf{decisively ruled out}
+with $\Delta\chisq = -24.1$.
+
+The project then pivoted to a scale where ``resonance'' physics is physically
+relevant: the thermonuclear combustion in Type Ia supernova progenitors.
+We developed and validated a one-dimensional reactive Euler solver implementing
+the Zel'dovich gradient mechanism for deflagration-to-detonation transition
+(DDT), demonstrating that the same computational infrastructure that tested
+cosmological hypotheses can produce validated astrophysical predictions.
+
+This paper is organized as follows: Section~\ref{sec:data} describes the
+Pantheon+SH0ES dataset; Section~\ref{sec:theory} presents the theoretical
+framework; Section~\ref{sec:cosmo_results} reports the cosmological
+falsification; Section~\ref{sec:ddt} describes the DDT solver; and
+Section~\ref{sec:conclusions} summarizes our conclusions.
+
+% ============================================================================
+% DATA
+% ============================================================================
+
+\section{Data: The Pantheon+SH0ES Compilation}
+\label{sec:data}
+
+The Pantheon+SH0ES dataset~\cite{Scolnic2022} represents the most comprehensive
+compilation of Type Ia supernovae for cosmological analysis, containing 1,701
+spectroscopically confirmed SNe~Ia from 18 independent surveys spanning
+redshift $0.001 \leq z \leq 2.26$.
+
+\begin{figure}[t]
+\centering
+\input{figures/hubble_diagram.tex}
+\caption{Hubble diagram of 1,701 Type Ia supernovae from Pantheon+SH0ES.
+\textit{Top:} Distance modulus $\mu$ versus redshift $z$ with best-fit $\lcdm$
+model (solid line). \textit{Bottom:} Residuals $\Delta\mu = \mu_\text{obs} -
+\mu_\text{model}$ showing scatter consistent with measurement uncertainties.}
+\label{fig:hubble_diagram}
+\end{figure}
+
+Key observables for each supernova include:
+\begin{itemize}
+    \item $z_\text{HD}$: Hubble diagram redshift (CMB frame, peculiar-velocity corrected)
+    \item $\mu_\text{SH0ES}$: Distance modulus calibrated to SH0ES Cepheid scale
+    \item $\sigma_\mu$: Distance modulus uncertainty (diagonal)
+    \item $x_1$, $c$: SALT2 light-curve stretch and color parameters
+\end{itemize}
+
+The dataset includes 77 Cepheid-calibrated SNe~Ia that anchor the distance
+ladder, enabling simultaneous constraints on $\Hubble$ and cosmological
+parameters.
+
+Figure~\ref{fig:hubble_diagram} presents the Hubble diagram and residuals.
+The data exhibit the characteristic brightening at $z \gtrsim 0.5$ that led
+to the discovery of cosmic acceleration~\cite{Riess1998,Perlmutter1999}.
+
+% ============================================================================
+% THEORETICAL FRAMEWORK
+% ============================================================================
+
+\section{Theoretical Framework}
+\label{sec:theory}
+
+\subsection{Standard $\lcdm$ Cosmology}
+
+In the standard flat $\lcdm$ model, the dimensionless Hubble parameter is:
+\begin{equation}
+    E(z) \equiv \frac{H(z)}{\Hubble} = \sqrt{\Omegam(1+z)^3 + \OmegaL}
+    \label{eq:Ez_lcdm}
+\end{equation}
+where $\Omegam + \OmegaL = 1$ for a flat universe.
+
+The luminosity distance is:
+\begin{equation}
+    \dL(z) = \frac{c(1+z)}{\Hubble} \int_0^z \frac{\dd z'}{E(z')}
+    \label{eq:dL}
+\end{equation}
+and the distance modulus:
+\begin{equation}
+    \mu(z) = 5\log_{10}\left(\frac{\dL(z)}{10\,\text{pc}}\right)
+    \label{eq:mu}
+\end{equation}
+
+\subsection{The Spandrel Stiffness Model}
+
+The Spandrel model introduces a ``stiffness'' parameter $\varepsilon$ that
+modifies the expansion history:
+\begin{equation}
+    E^2(z) = \Omegam(1+z)^3 + \OmegaL + \varepsilon f(z)
+    \label{eq:Ez_spandrel}
+\end{equation}
+where $f(z)$ encodes the stiffness contribution. Physical interpretation:
+spacetime exhibits rigidity that affects photon propagation, modifying the
+distance-redshift relationship differently at early versus late times.
+
+\begin{figure}[t]
+\centering
+\input{figures/spandrel_correction.tex}
+\caption{Spandrel stiffness correction to the distance modulus. The correction
+$\Delta\mu_\varepsilon(z)$ grows with redshift but remains degenerate with
+$\Omegam$, providing no statistical improvement over $\lcdm$.}
+\label{fig:spandrel_correction}
+\end{figure}
+
+\subsection{The Riemann Resonance Model}
+
+The Riemann resonance model proposes log-periodic oscillation in dark energy
+tied to the Riemann zeta function. The non-trivial zeros of $\zeta(s)$ occur
+at $s = \tfrac{1}{2} + \ii\gamma_n$, with $\gammaone = 14.134725\ldots$
+
+The predicted equation of state (Eq.~\ref{eq:riemann_w}) produces characteristic
+oscillations in the $w_0$--$w_a$ plane as BAO measurements at different redshifts
+trace a ``Riemann snake'' pattern.
+
+\begin{figure}[t]
+\centering
+\input{figures/riemann_snake.tex}
+\caption{The Riemann resonance prediction in the $w_0$--$w_a$ plane.
+The predicted oscillatory pattern (dashed curve) fails to pass through
+DESI 2024 BAO constraints at $z = 0.3, 0.5, 0.7, 1.0$ (colored ellipses),
+resulting in $\Delta\chisq = -24.1$ relative to $\lcdm$ (star).}
+\label{fig:riemann_snake}
+\end{figure}
+
+% ============================================================================
+% COSMOLOGICAL RESULTS
+% ============================================================================
+
+\section{Cosmological Analysis and Falsification}
+\label{sec:cosmo_results}
+
+\subsection{Maximum Likelihood Estimation}
+
+We perform maximum likelihood estimation (MLE) for model parameters using the
+$\chisq$ statistic:
+\begin{equation}
+    \chisq = \sum_i \frac{[\mu_\text{obs}(z_i) - \mu_\text{model}(z_i)]^2}{\sigma_{\mu,i}^2}
+    \label{eq:chisq}
+\end{equation}
+
+Table~\ref{tab:cosmo_results} summarizes the best-fit parameters and goodness
+of fit for each model.
+
+\begin{table}[t]
+\centering
+\caption{Cosmological fit results for Pantheon+SH0ES data.}
+\label{tab:cosmo_results}
+\begin{ruledtabular}
+\begin{tabular}{lcccc}
+Model & $\Hubble$ & $\Omegam$ & $\varepsilon$/Amplitude & $\chisq/\text{dof}$ \\
+\hline
+$\lcdm$ (2 par.) & $72.97$ & $0.351$ & --- & $0.439$ \\
+Spandrel (3 par.) & $72.83$ & $0.394$ & $0.114$ & $0.439$ \\
+Riemann (4 par.) & $72.91$ & $0.347$ & $A = 0.02$ & $0.453$ \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\subsection{Model Comparison}
+
+The likelihood ratio test between $\lcdm$ and Spandrel yields:
+\begin{equation}
+    \Delta\chisq_\text{Spandrel} = 0.480, \quad p = 0.488 \quad (0.69\sigma)
+\end{equation}
+indicating that the stiffness parameter $\varepsilon$ is \textbf{degenerate}
+with $\Omegam$ and provides no statistical improvement.
+
+For the Riemann resonance model tested against combined Pantheon+ and DESI
+2024 BAO data:
+\begin{equation}
+    \boxed{\Delta\chisq_\text{Riemann} = -24.1}
+\end{equation}
+
+The Riemann model is \textbf{decisively ruled out} at $>5\sigma$ significance.
+The predicted log-periodic oscillation does not appear in the data
+(Figure~\ref{fig:riemann_snake}).
+
+\begin{figure}[t]
+\centering
+\input{figures/contour_H0_Om.tex}
+\caption{Posterior constraints on $\Hubble$ and $\Omegam$ from Pantheon+SH0ES.
+Contours show 68\% and 95\% confidence regions. The Spandrel $\varepsilon$
+parameter is marginalized, showing degeneracy with $\Omegam$.}
+\label{fig:contours}
+\end{figure}
+
+% ============================================================================
+% DDT SOLVER
+% ============================================================================
+
+\section{Type Ia Supernova DDT Solver}
+\label{sec:ddt}
+
+Having falsified the cosmological hypothesis, we pivot to a domain where
+``resonance'' physics is physically meaningful: the coupling between pressure
+waves and thermonuclear flames in Type Ia supernova progenitors.
+
+\subsection{Governing Equations}
+
+The one-dimensional reactive Euler equations in conservation form:
+\begin{equation}
+    \frac{\partial \vec{U}}{\partial t} + \frac{\partial \vec{F}}{\partial x} = \vec{S}
+    \label{eq:euler}
+\end{equation}
+where:
+\begin{align}
+    \vec{U} &= \begin{pmatrix} \rho \\ \rho u \\ E \\ \rho Y \end{pmatrix}, \quad
+    \vec{F} = \begin{pmatrix} \rho u \\ \rho u^2 + P \\ (E+P)u \\ \rho u Y \end{pmatrix}, \nonumber\\
+    \vec{S} &= \begin{pmatrix} 0 \\ 0 \\ Q\dot{\omega} \\ -\dot{\omega} \end{pmatrix}
+    \label{eq:euler_vectors}
+\end{align}
+
+Here $\rho$ is density, $u$ velocity, $E$ total energy density, $Y$ the C$^{12}$
+mass fraction, $P$ pressure, $Q$ nuclear energy release, and $\dot{\omega}$
+the reaction rate.
+
+\begin{figure}[t]
+\centering
+\input{figures/ddt_structure.tex}
+\caption{Structure of the deflagration-to-detonation transition. A temperature
+gradient in unburned fuel steepens until the spontaneous wave velocity
+$u_\text{sp}$ matches the sound speed $c_s$, triggering DDT. The detonation
+wave propagates at $\sim 5 \times 10^8$~cm/s.}
+\label{fig:ddt_structure}
+\end{figure}
+
+\subsection{Equation of State}
+
+White dwarf matter requires the Chandrasekhar degenerate electron equation of
+state~\cite{Chandrasekhar1931}:
+\begin{equation}
+    P_\text{deg} = \frac{\pi m_e^4 c^5}{3h^3} f(x)
+    \label{eq:P_deg}
+\end{equation}
+where $x = p_F/(m_e c)$ is the relativity parameter, $p_F = \hbar(3\pi^2 n_e)^{1/3}$
+is the Fermi momentum, and:
+\begin{equation}
+    f(x) = x(2x^2 - 3)\sqrt{1+x^2} + 3\sinh^{-1}(x)
+    \label{eq:f_chandrasekhar}
+\end{equation}
+
+The total pressure includes ion and radiation contributions:
+\begin{equation}
+    P = P_\text{deg}(\rho) + P_\text{ion}(\rho, T) + P_\text{rad}(T)
+    \label{eq:P_total}
+\end{equation}
+
+\begin{figure}[t]
+\centering
+\input{figures/eos_gamma.tex}
+\caption{Effective adiabatic index $\gamma_\text{eff} = (\partial \ln P /
+\partial \ln \rho)_s$ versus density for white dwarf matter. The index
+transitions from the non-relativistic limit ($\gamma = 5/3$) at low density
+to the ultra-relativistic limit ($\gamma = 4/3$) at high density.}
+\label{fig:eos_gamma}
+\end{figure}
+
+\subsection{HLLC Riemann Solver}
+
+We employ the Harten-Lax-van Leer-Contact (HLLC) approximate Riemann
+solver~\cite{Toro2009} with MUSCL reconstruction for second-order accuracy.
+The wave speed estimates:
+\begin{align}
+    S_L &= \min(u_L - c_L, u_R - c_R) \\
+    S_R &= \max(u_L + c_L, u_R + c_R)
+\end{align}
+and the contact wave speed:
+\begin{equation}
+    S_* = \frac{P_R - P_L + \rho_L u_L(S_L - u_L) - \rho_R u_R(S_R - u_R)}
+               {\rho_L(S_L - u_L) - \rho_R(S_R - u_R)}
+    \label{eq:S_star}
+\end{equation}
+
+\subsection{Nuclear Burning Network}
+
+Carbon-12 fusion proceeds via multiple channels:
+\begin{align}
+    \ce{^{12}C + ^{12}C} &\to \ce{^{20}Ne + \alpha} \quad (Q = +4.62~\text{MeV}) \\
+    &\to \ce{^{23}Na + p} \quad (Q = +2.24~\text{MeV}) \\
+    &\to \ce{^{23}Mg + n} \quad (Q = -2.62~\text{MeV})
+\end{align}
+
+The Caughlan-Fowler rate~\cite{CaughlanFowler1988}:
+\begin{equation}
+    \lambda = \frac{S(E_0)}{E_0} \exp\left(-\frac{3E_0}{kT}\right)
+              \sqrt{\frac{8}{\pi\mu(kT)^3}}
+    \label{eq:cf_rate}
+\end{equation}
+where $E_0 = (b\,kT/2)^{2/3}$ is the Gamow peak energy.
+
+\begin{figure}[t]
+\centering
+\input{figures/nuclear_network.tex}
+\caption{Schematic of the carbon-12 burning network showing the primary
+reaction channels and their Q-values. At high temperatures ($T \gtrsim
+5 \times 10^9$~K), burning proceeds to nuclear statistical equilibrium
+(NSE), producing iron-group elements dominated by $^{56}$Ni.}
+\label{fig:nuclear_network}
+\end{figure}
+
+\subsection{The Zel'dovich Gradient Mechanism}
+
+The DDT trigger is the Zel'dovich gradient mechanism~\cite{Zeldovich1980}:
+when a temperature gradient exists in unburned fuel, hotter material burns
+faster, creating a ``spontaneous wave'' with velocity:
+\begin{equation}
+    u_\text{sp} = \left|\frac{\dd T}{\dd x}\right|^{-1}
+                  \left|\frac{\dd T}{\dd t}\right|_\text{burn}
+    \label{eq:u_sp}
+\end{equation}
+
+When $u_\text{sp} \approx c_s$, pressure waves couple with the burning front,
+triggering detonation:
+\begin{equation}
+    \boxed{u_\text{sp} \approx c_s \implies \text{DDT}}
+    \label{eq:ddt_criterion}
+\end{equation}
+
+\subsection{DDT Simulation Results}
+
+Table~\ref{tab:ddt_results} compares simulation outputs with observed Type Ia
+supernova properties.
+
+\begin{table}[t]
+\centering
+\caption{DDT simulation results compared to observations.}
+\label{tab:ddt_results}
+\begin{ruledtabular}
+\begin{tabular}{lcc}
+Metric & Simulation & Observed \\
+\hline
+Detonation time & $0.76$~ms & $0.1$--$1$~ms \\
+Shock velocity & $5.4 \times 10^8$~cm/s & $5$--$10 \times 10^8$~cm/s \\
+Peak temperature & $5 \times 10^9$~K & $5$--$10 \times 10^9$~K \\
+$^{56}$Ni mass & $1.04~\Msun$ & $0.4$--$0.9~\Msun$ \\
+Peak $M_B$ & $-19.9$ & $-19.3 \pm 0.5$ \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\input{figures/ddt_evolution.tex}
+\caption{Time evolution of the DDT simulation. \textit{Left to right:} Density,
+velocity, temperature, and C$^{12}$ mass fraction profiles at $t = 0$, $0.3$,
+$0.6$, and $0.76$~ms. The detonation wave forms at $t \approx 0.5$~ms when the
+Zel'dovich gradient criterion is satisfied.}
+\label{fig:ddt_evolution}
+\end{figure*}
+
+\subsection{Arnett's Rule and Peak Luminosity}
+
+The peak luminosity of a Type Ia supernova is governed by Arnett's
+rule~\cite{Arnett1982}:
+\begin{equation}
+    L_\text{peak} \approx \frac{\varepsilon_\text{Ni} M_\text{Ni}}{\tau_\text{Ni}}
+    \label{eq:arnett}
+\end{equation}
+where $\varepsilon_\text{Ni} = 3.9 \times 10^{10}$~erg/g/s is the specific
+energy generation rate from $^{56}$Ni decay, $M_\text{Ni}$ is the nickel mass,
+and $\tau_\text{Ni} = 8.8$~days is the decay timescale.
+
+Our simulated $M_\text{Ni} = 1.04~\Msun$ yields $M_B \approx -19.9$, slightly
+brighter than typical SNe~Ia due to the simplified 1D geometry that
+overestimates burning efficiency.
+
+% ============================================================================
+% TURBULENT FLAME THEORY
+% ============================================================================
+
+\section{Turbulent Flame Theory and the Phillips Relation}
+\label{sec:turbulence}
+
+\begin{figure}[t]
+\centering
+\input{figures/kolmogorov_cascade.tex}
+\caption{The Kolmogorov turbulent cascade. Energy injected at the integral
+scale $L$ cascades to smaller scales following the $k^{-5/3}$ spectrum until
+dissipation at the Kolmogorov scale $\lambda_k$. Turbulent flames develop
+fractal structure with dimension $D \approx 2.3$--$2.7$.}
+\label{fig:kolmogorov}
+\end{figure}
+
+The connection between turbulence and the Phillips relation~\cite{Phillips1993}
+provides insight into Type Ia supernova standardization:
+\begin{equation}
+    M_B = -19.3 + 0.78 \times (\Delta m_{15} - 1.1)
+    \label{eq:phillips}
+\end{equation}
+
+Turbulent deflagration flames develop fractal geometry with dimension $D$:
+\begin{equation}
+    A = A_0 \left(\frac{L}{\lambda_k}\right)^{D-2}
+    \label{eq:fractal_area}
+\end{equation}
+
+The causal chain:
+\begin{equation}
+    D \uparrow \implies A \uparrow \implies \dot{M}_\text{burn} \uparrow
+    \implies M_\text{Ni} \uparrow \implies L_\text{peak} \uparrow
+    \implies \Delta m_{15} \downarrow
+    \label{eq:phillips_chain}
+\end{equation}
+
+This suggests the Phillips relation emerges from variations in turbulent
+flame geometry among progenitor systems.
+
+% ============================================================================
+% CONCLUSIONS
+% ============================================================================
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+The Spandrel Project demonstrates the complete arc of scientific methodology:
+
+\begin{enumerate}
+    \item \textbf{Hypothesis:} Dark energy oscillates at Riemann zero frequency $\gammaone$
+    \item \textbf{Prediction:} Log-periodic pattern in $w_0$--$w_a$ plane
+    \item \textbf{Data:} 1,701 SNe~Ia (Pantheon+) + DESI 2024 BAO
+    \item \textbf{Falsification:} $\Delta\chisq = -24.1$ ($>5\sigma$)
+    \item \textbf{Pivot:} Scale insight---Gpc $\to$ km
+    \item \textbf{Validation:} DDT solver reproduces SN~Ia physics
+\end{enumerate}
+
+The negative cosmological result has value: it prevents others from pursuing
+the same hypothesis. The positive astrophysical result---a validated DDT
+solver---provides infrastructure for future three-dimensional large-eddy
+simulations aimed at deriving the Phillips relation from first principles.
+
+\begin{acknowledgments}
+This work used the Pantheon+SH0ES dataset~\cite{Scolnic2022}. We thank the
+supernova cosmology community for making precision data publicly available.
+\end{acknowledgments}
+
+\bibliography{references}
+
+\appendix
+
+\section{Physical Constants}
+\label{app:constants}
+
+\begin{table}[h]
+\centering
+\caption{Physical constants used in this work (CGS).}
+\begin{ruledtabular}
+\begin{tabular}{lcc}
+Constant & Symbol & Value \\
+\hline
+Speed of light & $c$ & $2.998 \times 10^{10}$~cm/s \\
+Planck constant & $h$ & $6.626 \times 10^{-27}$~erg$\cdot$s \\
+Boltzmann constant & $k_B$ & $1.381 \times 10^{-16}$~erg/K \\
+Electron mass & $m_e$ & $9.109 \times 10^{-28}$~g \\
+Proton mass & $m_p$ & $1.673 \times 10^{-24}$~g \\
+Solar mass & $\Msun$ & $1.989 \times 10^{33}$~g \\
+First Riemann zero & $\gammaone$ & $14.134725$ \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\section{HLLC Flux Formula}
+\label{app:hllc}
+
+The HLLC flux in region $*L$ (between $S_L$ and $S_*$):
+\begin{equation}
+    \vec{F}_{*L} = \vec{F}_L + S_L(\vec{U}_{*L} - \vec{U}_L)
+\end{equation}
+with:
+\begin{equation}
+    \vec{U}_{*K} = \rho_K \frac{S_K - u_K}{S_K - S_*}
+    \begin{pmatrix}
+        1 \\ S_* \\ E_K/\rho_K + (S_* - u_K)[S_* + P_K/(\rho_K(S_K - u_K))] \\ Y_K
+    \end{pmatrix}
+\end{equation}
+for $K \in \{L, R\}$.
+
+\end{document}

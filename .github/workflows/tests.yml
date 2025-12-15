@@ -1,0 +1,51 @@
+# GitHub Actions workflow for running tests
+# Triggers on all pushes and PRs
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.py'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short
+
+      - name: Check imports
+        run: |
+          python -c "from spandrel_cosmology import SpandrelCosmology; print('Cosmology OK')"
+          python -c "from ddt_solver.eos_white_dwarf import eos_from_rho_T; print('EOS OK')"
+          python -c "from ddt_solver.flux_hllc import compute_hllc_update; print('HLLC OK')"
+          python -c "from ddt_solver.reaction_carbon import reaction_rate_c12; print('Nuclear OK')"
+          python -c "from constants import C_LIGHT_CGS, C_LIGHT_KMS; print('Constants OK')"

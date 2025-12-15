@@ -1,0 +1,75 @@
+% DDT Structure Diagram
+% Shows deflagration, transition, and detonation regions
+
+\begin{tikzpicture}[
+    scale=0.9,
+    every node/.style={font=\small},
+    flame/.style={detored, thick},
+    shock/.style={cosmoblue, very thick},
+    arrow/.style={-{Stealth[length=2mm]}, thick}
+]
+
+    % Background gradient for temperature
+    \shade[left color=cosmoblue!20, right color=detored!40]
+        (0,0) rectangle (8,4);
+
+    % Unburned fuel region
+    \fill[white, opacity=0.7] (0,0) rectangle (2.5,4);
+    \node[anchor=center, font=\footnotesize] at (1.25,3.5) {Unburned};
+    \node[anchor=center, font=\footnotesize] at (1.25,3.1) {C$^{12}$/O$^{16}$};
+    \node[anchor=center, font=\tiny, gray] at (1.25,2.5) {$T \sim 10^8$ K};
+    \node[anchor=center, font=\tiny, gray] at (1.25,2.1) {$\rho \sim 2\times10^7$ g/cm$^3$};
+
+    % Deflagration region
+    \fill[flameorange, opacity=0.3] (2.5,0) rectangle (4,4);
+    \node[anchor=center, font=\footnotesize] at (3.25,3.5) {Deflagration};
+    \node[anchor=center, font=\tiny, gray] at (3.25,2.8) {$S_\mathrm{L} \sim 10^7$ cm/s};
+
+    % DDT transition zone
+    \fill[nucpurple, opacity=0.3] (4,0) rectangle (5.5,4);
+    \node[anchor=center, font=\footnotesize, nucpurple] at (4.75,3.5) {\textbf{DDT}};
+    \node[anchor=center, font=\tiny] at (4.75,3.0) {$u_\mathrm{sp} \approx c_s$};
+
+    % Detonation region
+    \fill[detored, opacity=0.3] (5.5,0) rectangle (8,4);
+    \node[anchor=center, font=\footnotesize] at (6.75,3.5) {Detonation};
+    \node[anchor=center, font=\footnotesize] at (6.75,3.1) {$^{56}$Ni synthesis};
+    \node[anchor=center, font=\tiny, gray] at (6.75,2.5) {$T \sim 5\times10^9$ K};
+    \node[anchor=center, font=\tiny, gray] at (6.75,2.1) {$v_\mathrm{det} \sim 5\times10^8$ cm/s};
+
+    % Flame front (wavy)
+    \draw[flame, decorate, decoration={snake, amplitude=2mm, segment length=5mm}]
+        (2.5,0) -- (2.5,4);
+
+    % Shock front
+    \draw[shock] (5.5,0) -- (5.5,4);
+
+    % Temperature gradient curve
+    \draw[datablack, very thick, smooth]
+        plot coordinates {(0,0.5) (1,0.6) (2,0.8) (2.5,1.5) (3,2.2) (3.5,2.8)
+                         (4,3.2) (4.5,3.4) (5,3.5) (5.5,3.6) (6,3.6) (7,3.6) (8,3.6)};
+
+    % Axis labels
+    \draw[arrow] (0,0) -- (8.5,0) node[right] {$x$};
+    \draw[arrow] (0,0) -- (0,4.5) node[above] {$T$};
+
+    % Velocity arrows
+    \draw[arrow, astrogreen] (1,1) -- (1.8,1) node[midway, above, font=\tiny] {$u_\mathrm{sp}$};
+    \draw[arrow, cosmoblue] (6.5,1) -- (7.5,1) node[midway, above, font=\tiny] {$v_\mathrm{det}$};
+
+    % Zel'dovich criterion box
+    \node[
+        draw=nucpurple,
+        thick,
+        fill=white,
+        inner sep=4pt,
+        font=\footnotesize,
+        align=center
+    ] at (4.75,1.2) {
+        $\displaystyle u_\mathrm{sp} = \frac{|\partial T/\partial t|_\mathrm{burn}}{|\partial T/\partial x|}$
+    };
+
+    % Scale bar
+    \draw[|-|, thick] (0,-0.3) -- (2,-0.3) node[midway, below, font=\tiny] {$\sim 100$ km};
+
+\end{tikzpicture}

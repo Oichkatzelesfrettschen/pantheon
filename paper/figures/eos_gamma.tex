@@ -1,0 +1,83 @@
+% Effective Adiabatic Index vs Density
+% Shows transition from non-relativistic (5/3) to ultra-relativistic (4/3)
+
+\begin{tikzpicture}
+    \begin{semilogxaxis}[
+        width=0.95\columnwidth,
+        height=5.5cm,
+        xlabel={Density $\rho$ (g/cm$^3$)},
+        ylabel={Effective $\gamma_\mathrm{eff}$},
+        xmin=1e5, xmax=1e11,
+        ymin=1.25, ymax=1.75,
+        grid=major,
+        grid style={gridgray, thin},
+        legend pos=north east,
+        legend style={draw=none, fill=white, fill opacity=0.9},
+    ]
+
+    % Chandrasekhar EOS curve
+    \addplot[
+        cosmoblue,
+        very thick,
+        smooth,
+        domain=5:11,
+        samples=100
+    ] {
+        5/3 - (5/3 - 4/3) * 1/(1 + exp(-(x - 8.5)*1.5))
+    };
+
+    % Non-relativistic limit
+    \addplot[
+        datablack,
+        dashed,
+        domain=5:11
+    ] {5/3};
+
+    % Ultra-relativistic limit
+    \addplot[
+        datablack,
+        dashed,
+        domain=5:11
+    ] {4/3};
+
+    % DDT density range
+    \fill[astrogreen, opacity=0.2]
+        (axis cs:1e7, 1.25) rectangle (axis cs:5e7, 1.75);
+    \draw[astrogreen, thick, dashed]
+        (axis cs:2e7, 1.25) -- (axis cs:2e7, 1.75);
+
+    % Chandrasekhar limit density
+    \draw[detored, thick, dotted]
+        (axis cs:2e9, 1.25) -- (axis cs:2e9, 1.75);
+
+    % Labels
+    \node[anchor=west, font=\footnotesize] at (axis cs:2e5, 1.68)
+        {Non-relativistic: $\gamma = 5/3$};
+    \node[anchor=west, font=\footnotesize] at (axis cs:2e5, 1.38)
+        {Ultra-relativistic: $\gamma = 4/3$};
+
+    \node[astrogreen, font=\tiny, rotate=90, anchor=south] at (axis cs:2e7, 1.5)
+        {DDT zone};
+
+    \node[detored, font=\tiny, rotate=90, anchor=south] at (axis cs:2e9, 1.5)
+        {$\rho_\mathrm{Ch}$};
+
+    \legend{Chandrasekhar EOS}
+
+    % Annotation box
+    \node[
+        anchor=south east,
+        draw=datablack,
+        fill=white,
+        fill opacity=0.9,
+        inner sep=4pt,
+        font=\footnotesize,
+        align=left
+    ] at (rel axis cs:0.98,0.02) {
+        $x = p_F/(m_e c)$\\[2pt]
+        $x \ll 1$: $\gamma \to 5/3$\\
+        $x \gg 1$: $\gamma \to 4/3$
+    };
+
+    \end{semilogxaxis}
+\end{tikzpicture}
