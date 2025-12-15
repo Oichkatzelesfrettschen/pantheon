@@ -1,0 +1,24 @@
+SPANDREL COSMOLOGY ANALYSIS SUMMARY
+==================================================
+
+Dataset: Pantheon+ (1701 SNe Ia)
+Redshift range: z = 0.0010 to 2.5000
+
+MLE RESULTS:
+------------------------------
+
+LCDM:
+  H0 = 72.9743 km/s/Mpc
+  Omega_m = 0.350820
+  chi2/dof = 0.438729
+
+SPANDREL:
+  H0 = 72.8264 km/s/Mpc
+  Omega_m = 0.394189
+  epsilon = 0.11379826
+  chi2/dof = 0.438705
+
+LIKELIHOOD RATIO TEST:
+  Delta chi2 = 0.4799
+  p-value = 0.488471
+  Significance = 0.69 sigma

@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spandrel"
+version = "1.0.0"
+description = "Cosmological hypothesis testing and Type Ia supernova DDT simulation"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Eirikr"}
+]
+keywords = [
+    "cosmology",
+    "supernova",
+    "dark-energy",
+    "hydrodynamics",
+    "nucleosynthesis",
+    "pantheon"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "numpy>=1.20",
+    "pandas>=1.3",
+    "scipy>=1.7",
+    "matplotlib>=3.4",
+]
+
+[project.optional-dependencies]
+gpu = ["mlx>=0.0.1"]
+jit = ["numba>=0.55"]
+all = [
+    "mlx>=0.0.1",
+    "numba>=0.55",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.urls]
+"Source" = "https://github.com/PantheonPlusSH0ES/DataRelease"
+"Pantheon+SH0ES" = "https://pantheonplussh0es.github.io/"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ddt_solver*", "elevated*", "synthesis*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
