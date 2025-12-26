@@ -18,7 +18,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ddt_solver.reaction_carbon import (
+from spandrel.ddt.reaction_carbon import (
     screening_factor,
     c12_c12_rate,
     reaction_rate_c12,
@@ -27,7 +27,7 @@ from ddt_solver.reaction_carbon import (
     chapman_jouguet_velocity,
     Q_EFF,
 )
-from constants import Q_BURN, K_BOLTZMANN, M_PROTON
+from spandrel.core.constants import Q_BURN, K_BOLTZMANN, M_PROTON
 
 
 class TestScreeningFactor:
@@ -311,7 +311,7 @@ class TestPhysicalConsistency:
 
         dX_dt, eps = reaction_rate_c12(rho, T, X_C12)
 
-        # Timescale τ = X / |dX/dt|
+        # Timescale tau = X / |dX/dt|
         tau = X_C12[0] / np.abs(dX_dt[0])
 
         # Should be positive and finite

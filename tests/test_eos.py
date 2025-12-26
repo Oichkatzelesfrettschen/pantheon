@@ -3,7 +3,7 @@ Tests for White Dwarf Equation of State (eos_white_dwarf.py)
 
 Tests validate:
 1. Degenerate pressure limits (non-relativistic and ultra-relativistic)
-2. EOS inversion consistency (ρ,T → e → T roundtrip)
+2. EOS inversion consistency (rho,T -> e -> T roundtrip)
 3. Sound speed causality (c_s < c)
 4. Effective gamma bounds (4/3 to 5/3)
 5. Physical value ranges
@@ -18,7 +18,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ddt_solver.eos_white_dwarf import (
+from spandrel.ddt.eos_white_dwarf import (
     electron_density,
     fermi_momentum,
     relativity_parameter,
@@ -32,7 +32,7 @@ from ddt_solver.eos_white_dwarf import (
     temperature_from_rho_e,
     EOSState,
 )
-from constants import C_LIGHT_CGS, K_BOLTZMANN, M_ELECTRON, M_PROTON
+from spandrel.core.constants import C_LIGHT_CGS, K_BOLTZMANN, M_ELECTRON, M_PROTON
 
 
 class TestElectronDensity:
@@ -53,9 +53,9 @@ class TestElectronDensity:
 
     def test_typical_wd_density(self):
         """Check electron density at typical WD central density."""
-        rho = np.array([2e9])  # g/cm³
+        rho = np.array([2e9])  # g/cm^3
         n_e = electron_density(rho)
-        # n_e ≈ Y_e * rho / m_p ≈ 0.5 * 2e9 / 1.67e-24 ≈ 6e32
+        # n_e ~ Y_e * rho / m_p ~ 0.5 * 2e9 / 1.67e-24 ~ 6e32
         assert 1e32 < n_e[0] < 1e33
 
 
@@ -107,23 +107,23 @@ class TestDegeneratePressure:
         assert np.all(P > 0)
 
     def test_non_relativistic_scaling(self):
-        """At low density, P should scale as ρ^(5/3)."""
+        """At low density, P should scale as rho^(5/3)."""
         # Use low densities where x << 1
         rho1, rho2 = 1e5, 2e5
         P1 = pressure_degenerate(np.array([rho1]))
         P2 = pressure_degenerate(np.array([rho2]))
-        # P ∝ ρ^(5/3) → P2/P1 = 2^(5/3) ≈ 3.17
+        # P ∝ rho^(5/3) -> P2/P1 = 2^(5/3) ~ 3.17
         expected_ratio = 2.0 ** (5.0 / 3.0)
         actual_ratio = P2[0] / P1[0]
         assert np.isclose(actual_ratio, expected_ratio, rtol=0.1)
 
     def test_ultra_relativistic_scaling(self):
-        """At high density, P should scale as ρ^(4/3)."""
+        """At high density, P should scale as rho^(4/3)."""
         # Use high densities where x >> 1
         rho1, rho2 = 1e10, 2e10
         P1 = pressure_degenerate(np.array([rho1]))
         P2 = pressure_degenerate(np.array([rho2]))
-        # P ∝ ρ^(4/3) → P2/P1 = 2^(4/3) ≈ 2.52
+        # P ∝ rho^(4/3) -> P2/P1 = 2^(4/3) ~ 2.52
         expected_ratio = 2.0 ** (4.0 / 3.0)
         actual_ratio = P2[0] / P1[0]
         assert np.isclose(actual_ratio, expected_ratio, rtol=0.1)
@@ -208,7 +208,7 @@ class TestEffectiveGamma:
     """Test effective adiabatic index."""
 
     def test_bounds(self):
-        """γ_eff should be between 4/3 (ultra-rel) and 5/3 (non-rel)."""
+        """gamma_eff should be between 4/3 (ultra-rel) and 5/3 (non-rel)."""
         rho = np.logspace(6, 10, 20)
         T = np.full_like(rho, 1e9)
         state = eos_from_rho_T(rho, T)
@@ -216,14 +216,14 @@ class TestEffectiveGamma:
         assert np.all(state.gamma_eff <= 5.0 / 3.0 + 0.01)
 
     def test_approaches_5_3_at_low_density(self):
-        """At low density (non-rel), γ → 5/3."""
+        """At low density (non-rel), gamma -> 5/3."""
         rho = np.array([1e5])
         T = np.array([1e8])
         state = eos_from_rho_T(rho, T)
         assert np.isclose(state.gamma_eff[0], 5.0 / 3.0, rtol=0.1)
 
     def test_approaches_4_3_at_high_density(self):
-        """At high density (ultra-rel), γ → 4/3."""
+        """At high density (ultra-rel), gamma -> 4/3."""
         rho = np.array([1e10])
         T = np.array([1e9])
         state = eos_from_rho_T(rho, T)
@@ -231,10 +231,10 @@ class TestEffectiveGamma:
 
 
 class TestEOSInversion:
-    """Test EOS inversion (ρ, e → T)."""
+    """Test EOS inversion (rho, e -> T)."""
 
     def test_roundtrip_consistency(self):
-        """(ρ, T) → e → T should recover original T."""
+        """(rho, T) -> e -> T should recover original T."""
         rho = np.array([1e7, 2e7, 5e7, 1e8])
         T_original = np.array([1e9, 2e9, 3e9, 5e9])
 
@@ -293,7 +293,7 @@ class TestPhysicalConsistency:
     """Test physical consistency of EOS."""
 
     def test_thermodynamic_stability(self):
-        """∂P/∂ρ should be positive (mechanical stability)."""
+        """dP/drho should be positive (mechanical stability)."""
         rho = np.logspace(6, 10, 100)
         T = np.full_like(rho, 1e9)
         state = eos_from_rho_T(rho, T)

@@ -18,8 +18,8 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from spandrel_cosmology import SpandrelCosmology, SpandrelFitter
-from constants import C_LIGHT_KMS, H0_FIDUCIAL, OMEGA_M_FIDUCIAL
+from spandrel.cosmology.spandrel_cosmology import SpandrelCosmology, SpandrelFitter
+from spandrel.core.constants import C_LIGHT_KMS, H0_FIDUCIAL, OMEGA_M_FIDUCIAL
 
 
 class TestHubbleParameter:
@@ -46,7 +46,7 @@ class TestHubbleParameter:
         assert E_2 > E_1 > E_0
 
     def test_E_flat_universe_normalization(self):
-        """For flat universe, E(z)² = Ω_m(1+z)³ + Ω_Λ."""
+        """For flat universe, E(z)^2 = Omega_m(1+z)^3 + Omega_Lambda."""
         cosmo = SpandrelCosmology(H0=70.0, Omega_m=0.3)
         z = 1.0
         E_squared = cosmo.E(z)**2
@@ -138,7 +138,7 @@ class TestSpandrelCorrection:
         assert np.isclose(cosmo.spandrel_correction(0), 0.0)
 
     def test_zero_when_epsilon_zero(self):
-        """Spandrel correction should be zero when ε=0."""
+        """Spandrel correction should be zero when epsilon=0."""
         cosmo = SpandrelCosmology(H0=70.0, Omega_m=0.3, epsilon=0.0)
         for z in [0.1, 0.5, 1.0]:
             assert cosmo.spandrel_correction(z) == 0.0
@@ -153,7 +153,7 @@ class TestSpandrelCorrection:
         assert np.isclose(corr2, 2 * corr1)
 
     def test_recovers_lcdm_when_epsilon_zero(self):
-        """Spandrel model should match ΛCDM when ε=0."""
+        """Spandrel model should match LambdaCDM when epsilon=0."""
         cosmo = SpandrelCosmology(H0=70.0, Omega_m=0.3, epsilon=0.0)
         z = 0.5
         mu_spandrel = cosmo.distance_modulus_spandrel(z)
@@ -261,7 +261,7 @@ class TestPhysicalConsistency:
         assert d_high < d_low
 
     def test_omega_m_effect(self):
-        """Higher Ω_m should give smaller distances (at moderate z)."""
+        """Higher Omega_m should give smaller distances (at moderate z)."""
         cosmo_low = SpandrelCosmology(H0=70.0, Omega_m=0.2)
         cosmo_high = SpandrelCosmology(H0=70.0, Omega_m=0.4)
 
@@ -273,7 +273,7 @@ class TestPhysicalConsistency:
         assert d_high < d_low
 
     def test_flat_universe_constraint(self):
-        """Ω_Λ should equal 1 - Ω_m for flat universe."""
+        """Omega_Lambda should equal 1 - Omega_m for flat universe."""
         cosmo = SpandrelCosmology(H0=70.0, Omega_m=0.3)
         assert np.isclose(cosmo.Omega_Lambda, 0.7)
 

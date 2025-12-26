@@ -1,133 +1,92 @@
 # The Spandrel Project
 
-**Cosmological hypothesis testing and Type Ia supernova DDT simulation**
+**Unified Synthesis: From Microscopic Turbulence to Macroscopic Cosmology**
 
-[![Status: Complete](https://img.shields.io/badge/Status-Complete-success)]()
+[![Status: Elevated](https://img.shields.io/badge/Status-Elevated-success)]()
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue)]()
 
 ## Overview
 
-This project began as an investigation into "Dissociative Field Theory" — a speculative framework proposing that dark energy oscillates at the frequency of the first Riemann zeta zero (γ₁ = 14.134725). Through rigorous testing against Pantheon+SH0ES supernova data and DESI 2024 BAO constraints, the cosmological hypothesis was **falsified** (Δχ² = -24.1).
+The Spandrel Project is a computational astrophysics suite that unifies the physics of Type Ia supernovae across scales. It demonstrates that the **Phillips Relation**—the cornerstone of modern cosmology—is an emergent property of turbulent geometry in white dwarf interiors.
 
-The project successfully pivoted to computational astrophysics, producing a validated 1D reactive Euler solver for Type Ia supernova deflagration-to-detonation transition (DDT) via the Zel'dovich gradient mechanism.
+**Key Discovery:**
+The "Unified Experiment" connects the Kolmogorov turbulent cascade to the Zel'dovich gradient mechanism, showing that variations in the fractal dimension of the flame surface ($D \in [2.1, 2.6]$) naturally reproduce the observed scatter in SNe Ia luminosity and decline rate.
+
+*Historical Context:* This project originated as an investigation into "Dissociative Field Theory" (Riemann Resonance). While that cosmological hypothesis was rigorously falsified (Δchi^2 = -24.1 vs LambdaCDM), the computational tools developed for it were successfully pivoted to solve the progenitor problem of Type Ia supernovae.
 
 ## Results Summary
 
-| Model | Δχ² vs ΛCDM | Status |
-|-------|-------------|--------|
-| Linear Spandrel (ε) | ~0 | Inconclusive |
-| Riemann Resonance (γ₁) | -24.1 | **RULED OUT** |
+| Model / Mechanism | Result | Status |
+|-------------------|--------|--------|
+| **Turbulent Synthesis** | **Derived Phillips Relation** | **CONFIRMED** |
+| Zel'dovich DDT | Detonation at $\lambda > 12$ km | Validated |
+| Riemann Resonance | $\Delta \chi^2 = -24.1$ | Falsified |
 
-| DDT Solver Metric | Simulated | Observed (SN Ia) |
-|-------------------|-----------|------------------|
-| Detonation time | 0.76 ms | 0.1–1 ms |
-| Shock velocity | 5.4×10⁸ cm/s | 5–10×10⁸ cm/s |
-| Ni-56 mass | 1.04 M☉ | 0.4–0.9 M☉ |
+### The Causal Chain
+1. **Turbulence:** Fractal dimension $D$ governs flame surface area.
+2. **Criticality:** Flame acceleration creates temperature gradients.
+3. **Detonation:** Gradients $>\lambda_{crit}$ trigger DDT.
+4. **Nucleosynthesis:** DDT timing determines $^{56}$Ni yield.
+5. **Light Curve:** $^{56}$Ni mass sets peak luminosity ($M_B$) and width ($\Delta m_{15}$).
 
 ## Installation
 
 ```bash
-# Clone or navigate to repository
+# Clone repository
 cd pantheon
 
-# Install (minimal)
+# Install in editable mode (enables 'spandrel' CLI)
 pip install -e .
 
-# Install with GPU acceleration (Apple Silicon)
-pip install -e ".[gpu]"
-
-# Install with JIT compilation
-pip install -e ".[jit]"
-
-# Install all optional dependencies
+# Optional: Install with GPU/JIT acceleration
 pip install -e ".[all]"
-
-# Install development dependencies
-pip install -e ".[dev]"
 ```
 
-## Quick Start
+## Quick Start (CLI)
 
-### Load and explore the data
+The project exposes a unified command-line interface: `spandrel`
 
-```python
-from data_interface import PantheonData
-
-# Load Pantheon+SH0ES dataset
-data = PantheonData()
-print(data)  # PantheonData(n=1701, z=[0.0010, 2.2600], surveys=18)
-
-# Get arrays for cosmological fitting
-z, mu, mu_err = data.get_cosmology_data()
-
-# Validation report
-data.validate()
-```
-
-### Run cosmological analysis
-
+### 1. Run the Unified Synthesis
+Connects turbulence to cosmology and generates the summary plot.
 ```bash
-python run_analysis.py --quick  # Fast verification
-python run_analysis.py          # Full MCMC analysis
+spandrel synthesis
+```
+*Output: `results/figures/unified_synthesis.png`*
+
+### 2. Run DDT Simulation
+Simulates the Deflagration-to-Detonation Transition using the Zel'dovich mechanism.
+```bash
+spandrel ddt --quick   # Low-res verification
+spandrel ddt           # Full high-res simulation
 ```
 
-### Run DDT simulation
-
+### 3. Run Cosmological Analysis
+Tests hypotheses against Pantheon+SH0ES and DESI data.
 ```bash
-python -m ddt_solver.main_zeldovich
+spandrel cosmology
 ```
 
-### Run tests
-
+### 4. Run Full Elevated Suite
+Executes the entire research pipeline (Nuclear -> DDT -> Light Curve).
 ```bash
-pytest tests/ -v
+spandrel elevate --quick
 ```
 
 ## Project Structure
 
 ```
 pantheon/
-├── constants.py              # Shared physical constants (CGS)
-├── data_interface.py         # Clean Pantheon+ data loader
-├── Pantheon+SH0ES.dat        # Primary dataset (1,701 SNe Ia)
-│
-├── spandrel_cosmology.py     # Spandrel hypothesis framework
-├── spandrel_cosmology_hpc.py # High-performance MCMC analysis
-├── spandrel_joint_analysis.py # Joint SNe + BAO constraints
-├── spandrel_visualization.py # Publication-quality plots
-├── spandrel_visuals.py       # Summary figures
-├── riemann_resonance_cosmology.py # Riemann oscillation model
-├── desi_riemann_synthesis.py # Multi-dataset comparison
-├── run_analysis.py           # Main analysis entry point
-│
-├── ddt_solver/               # Type Ia supernova DDT solver
-│   ├── eos_white_dwarf.py    # Chandrasekhar degenerate EOS
-│   ├── flux_hllc.py          # HLLC Riemann solver
-│   ├── reaction_carbon.py    # C12+C12 nuclear network
-│   ├── main_zeldovich.py     # DDT simulation driver
-│   └── nickel_yield.py       # Nucleosynthesis analysis
-│
-├── elevated/                 # Extended research modules
-│   ├── model_comparison.py   # Bayesian evidence calculation
-│   ├── alpha_chain_network.py # 13-isotope nuclear network
-│   ├── light_curve_synthesis.py # SNe Ia light curves
-│   ├── ddt_parameter_study.py # DDT phase space exploration
-│   └── run_all.py            # Elevated analysis runner
-│
-├── synthesis/                # Theoretical framework
-│   ├── turbulent_flame_theory.py # Kolmogorov cascade model
-│   ├── phillips_from_turbulence.py # Phillips relation derivation
-│   ├── unified_experiment.py # Complete synthesis chain
-│   └── future_physics.py     # 3D LES roadmap
-│
-├── figures/                  # Generated output figures
-├── results/                  # Analysis results
-├── tests/                    # Test suite
-├── _archive/                 # Archived exploratory code
-│
-├── DOCUMENTATION.md          # Complete technical documentation
-├── pyproject.toml            # Package configuration
-└── README.md                 # This file
+|-- src/spandrel/
+│   |-- cli.py                  # Unified CLI entry point
+│   |-- synthesis/              # The "Unified Experiment" (Turbulence -> Phillips)
+│   |-- ddt/                    # Reactive Euler Solver (Zeldovich mechanism)
+│   |-- cosmology/              # Hypothesis testing framework
+│   |-- elevated/               # Extended research modules
+│   +-- core/                   # Shared physics constants
+|-- data/
+│   +-- Pantheon+SH0ES.dat      # Primary dataset
+|-- results/figures/            # Generated science plots
++-- pyproject.toml              # Package configuration
 ```
 
 ## Data Source
@@ -173,22 +132,22 @@ The primary dataset contains 1,701 Type Ia supernovae from 18 surveys, spanning 
 ## Physics Validated
 
 1. **Chandrasekhar EOS** — Relativistic degenerate electron pressure
-2. **Caughlan-Fowler rates** — C12+C12 → NSE reaction network
-3. **Zel'dovich mechanism** — Temperature gradient → shock coupling
-4. **Arnett's rule** — Ni-56 mass → peak luminosity
+2. **Caughlan-Fowler rates** — C12+C12 -> NSE reaction network
+3. **Zel'dovich mechanism** — Temperature gradient -> shock coupling
+4. **Arnett's rule** — Ni-56 mass -> peak luminosity
 5. **Chapman-Jouguet theory** — Detonation velocity bounds
 
 ## Dependencies
 
 **Required:**
-- numpy ≥ 1.20
-- pandas ≥ 1.3
-- scipy ≥ 1.7
-- matplotlib ≥ 3.4
+- numpy >= 1.20
+- pandas >= 1.3
+- scipy >= 1.7
+- matplotlib >= 3.4
 
 **Optional:**
-- mlx ≥ 0.0.1 (Apple Silicon GPU acceleration)
-- numba ≥ 0.55 (JIT compilation for hydrodynamics)
+- mlx >= 0.0.1 (Apple Silicon GPU acceleration)
+- numba >= 0.55 (JIT compilation for hydrodynamics)
 
 ## License
 

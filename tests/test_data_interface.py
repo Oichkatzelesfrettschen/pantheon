@@ -10,7 +10,7 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from data_interface import PantheonData, load_pantheon, DataStats
+from spandrel.core.data_interface import PantheonData, load_pantheon, DataStats
 
 
 class TestPantheonData:
@@ -116,7 +116,7 @@ class TestConstants:
 
     def test_imports_cleanly(self):
         """Constants should import without error."""
-        from constants import C_LIGHT, M_SUN, GAMMA_1
+        from spandrel.core.constants import C_LIGHT, M_SUN, GAMMA_1
         assert C_LIGHT > 0
         assert M_SUN > 0
         assert GAMMA_1 > 14 and GAMMA_1 < 15
@@ -127,17 +127,17 @@ class TestDDTSolver:
 
     def test_eos_imports(self):
         """EOS module should import."""
-        from ddt_solver.eos_white_dwarf import eos_from_rho_T
+        from spandrel.ddt.eos_white_dwarf import eos_from_rho_T
         assert callable(eos_from_rho_T)
 
     def test_flux_imports(self):
         """Flux module should import."""
-        from ddt_solver.flux_hllc import compute_hllc_update
+        from spandrel.ddt.flux_hllc import compute_hllc_update
         assert callable(compute_hllc_update)
 
     def test_reaction_imports(self):
         """Reaction module should import."""
-        from ddt_solver.reaction_carbon import c12_c12_rate
+        from spandrel.ddt.reaction_carbon import c12_c12_rate
         assert callable(c12_c12_rate)
 
 

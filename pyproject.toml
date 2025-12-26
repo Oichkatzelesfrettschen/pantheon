@@ -37,6 +37,7 @@ dependencies = [
     "pandas>=1.3",
     "scipy>=1.7",
     "matplotlib>=3.4",
+    "spandrel-core @ git+https://github.com/Oichkatzelesfrettschen/spandrel-core.git",
 ]
 
 [project.optional-dependencies]
@@ -56,8 +57,11 @@ dev = [
 "Pantheon+SH0ES" = "https://pantheonplussh0es.github.io/"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["ddt_solver*", "elevated*", "synthesis*"]
+where = ["src"]
+include = ["spandrel*"]
+
+[project.scripts]
+spandrel = "spandrel.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

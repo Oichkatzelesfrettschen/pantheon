@@ -18,7 +18,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ddt_solver.flux_hllc import (
+from spandrel.ddt.flux_hllc import (
     minmod,
     superbee,
     mc_limiter,

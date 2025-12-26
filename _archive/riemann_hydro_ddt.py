@@ -8,14 +8,14 @@ in Type Ia Supernovae is triggered by Riemann Resonance in degenerate plasma.
 
 The Core Idea:
     - White Dwarf plasma turbulence cascades through scale-invariant frequencies
-    - When the cascade hits γ₁ = 14.13 (first Riemann zero), vacuum coupling occurs
+    - When the cascade hits gamma_1 = 14.13 (first Riemann zero), vacuum coupling occurs
     - Energy is injected into the flame front, triggering detonation
 
 Physics Implemented:
     1. 1D Reactive Euler equations (compressible flow)
     2. Degenerate electron equation of state
-    3. Carbon-12 → Nickel-56 nuclear burning (simplified)
-    4. Riemann Resonance source term: S = α·ρ·cos(γ₁·ln(ρ/ρ₀))
+    3. Carbon-12 -> Nickel-56 nuclear burning (simplified)
+    4. Riemann Resonance source term: S = alpha·rho·cos(gamma_1·ln(rho/rho_0))
 
 The DDT Test:
     - Standard model: Does the deflagration stay subsonic?
@@ -57,15 +57,15 @@ K_B = 1.381e-16          # erg/K
 M_E = 9.109e-28          # g (electron mass)
 M_P = 1.673e-24          # g (proton mass)
 M_SUN = 1.989e33         # g
-G_NEWTON = 6.674e-8      # cm³/g/s²
+G_NEWTON = 6.674e-8      # cm^3/g/s^2
 
 # Nuclear physics
-Q_BURN = 7.0e17          # erg/g (C12 → Ni56 energy release)
+Q_BURN = 7.0e17          # erg/g (C12 -> Ni56 energy release)
 A_CARBON = 12.0          # Atomic mass of Carbon-12
 Z_CARBON = 6.0           # Atomic number
 
 # White Dwarf parameters
-RHO_CENTRAL = 2.0e9      # g/cm³ (central density near Chandrasekhar)
+RHO_CENTRAL = 2.0e9      # g/cm^3 (central density near Chandrasekhar)
 T_IGNITION = 7.0e8       # K (Carbon ignition temperature)
 CHANDRASEKHAR = 1.44     # Solar masses
 
@@ -83,20 +83,20 @@ class DegenerateEOS:
     Equation of state for degenerate electron gas.
 
     In the relativistic degenerate limit (White Dwarf interior):
-        P = K₁ · ρ^(4/3)  [relativistic]
-        P = K₂ · ρ^(5/3)  [non-relativistic]
+        P = K_1 · rho^(4/3)  [relativistic]
+        P = K₂ · rho^(5/3)  [non-relativistic]
 
     We use a blend that transitions smoothly.
     """
 
-    # EOS constants for Carbon/Oxygen mixture (Ye ≈ 0.5)
+    # EOS constants for Carbon/Oxygen mixture (Ye ~ 0.5)
     K_nr: float = 9.91e12   # Non-relativistic constant (cgs)
     K_rel: float = 1.231e15  # Relativistic constant (cgs)
     gamma_nr: float = 5/3
     gamma_rel: float = 4/3
 
     # Transition density
-    rho_trans: float = 2.0e6  # g/cm³
+    rho_trans: float = 2.0e6  # g/cm^3
 
     def pressure(self, rho: np.ndarray) -> np.ndarray:
         """Compute pressure from density."""
@@ -112,7 +112,7 @@ class DegenerateEOS:
         return (1 - f_rel) * P_nr + f_rel * P_rel
 
     def sound_speed(self, rho: np.ndarray) -> np.ndarray:
-        """Compute sound speed c_s = sqrt(dP/dρ)."""
+        """Compute sound speed c_s = sqrt(dP/drho)."""
         rho = np.atleast_1d(rho)
 
         x = rho / self.rho_trans
@@ -125,7 +125,7 @@ class DegenerateEOS:
         return np.sqrt(gamma_eff * P / rho)
 
     def internal_energy(self, rho: np.ndarray) -> np.ndarray:
-        """Compute specific internal energy e = P / (ρ(γ-1))."""
+        """Compute specific internal energy e = P / (rho(gamma-1))."""
         rho = np.atleast_1d(rho)
 
         x = rho / self.rho_trans
@@ -143,10 +143,10 @@ class DegenerateEOS:
 @dataclass
 class CarbonBurning:
     """
-    Simplified Carbon-12 → Nickel-56 burning model.
+    Simplified Carbon-12 -> Nickel-56 burning model.
 
     Reaction rate follows Arrhenius form:
-        ω = A · ρ · X_C · exp(-E_a / kT)
+        omega = A · rho · X_C · exp(-E_a / kT)
 
     where X_C is the Carbon mass fraction.
     """
@@ -161,9 +161,9 @@ class CarbonBurning:
     def reaction_rate(self, rho: np.ndarray, T: np.ndarray,
                       X_C: np.ndarray) -> np.ndarray:
         """
-        Compute mass burning rate (g/cm³/s).
+        Compute mass burning rate (g/cm^3/s).
 
-        Returns dρ_C/dt (mass of Carbon burned per volume per time)
+        Returns drho_C/dt (mass of Carbon burned per volume per time)
         """
         rho = np.atleast_1d(rho)
         T = np.atleast_1d(T)
@@ -179,7 +179,7 @@ class CarbonBurning:
 
     def energy_release_rate(self, rho: np.ndarray, T: np.ndarray,
                            X_C: np.ndarray) -> np.ndarray:
-        """Energy release rate (erg/cm³/s)."""
+        """Energy release rate (erg/cm^3/s)."""
         burn_rate = self.reaction_rate(rho, T, X_C)
         return burn_rate * self.Q_nuc
 
@@ -193,13 +193,13 @@ class RiemannResonance:
     The Riemann Resonance vacuum coupling.
 
     Hypothesis: At extreme densities, plasma turbulence couples to vacuum
-    fluctuations at the Riemann frequency γ₁ = 14.13.
+    fluctuations at the Riemann frequency gamma_1 = 14.13.
 
     Source term:
-        S_Riemann = α · ρ · cos(γ₁ · ln(ρ/ρ₀) + φ)
+        S_Riemann = alpha · rho · cos(gamma_1 · ln(rho/rho_0) + phi)
 
     This injects energy into the plasma when the density crosses
-    resonance points: ρ_n = ρ₀ · exp(nπ/γ₁)
+    resonance points: rho_n = rho_0 · exp(npi/gamma_1)
 
     Physical interpretation:
         - The plasma is a "Box-Kite" vortex fluid in 64D
@@ -216,28 +216,28 @@ class RiemannResonance:
             alpha: Coupling strength (erg/g/s at resonance)
             rho_0: Reference density for log scaling
             phase: Phase offset
-            gamma: Riemann frequency (default: γ₁)
+            gamma: Riemann frequency (default: gamma_1)
         """
         self.alpha = alpha
         self.rho_0 = rho_0
         self.phase = phase
         self.gamma = gamma
 
-        # Compute resonance densities (where cos = ±1)
+        # Compute resonance densities (where cos = +/-1)
         self.rho_resonances = self._compute_resonances()
 
     def _compute_resonances(self, n_max: int = 10) -> np.ndarray:
         """Compute the density values where resonance peaks occur."""
-        # cos(γ·ln(ρ/ρ₀) + φ) = ±1 when argument = nπ
+        # cos(gamma·ln(rho/rho_0) + phi) = +/-1 when argument = npi
         n_values = np.arange(-n_max, n_max + 1)
         log_rho = (n_values * np.pi - self.phase) / self.gamma
         return self.rho_0 * np.exp(log_rho)
 
     def source_term(self, rho: np.ndarray) -> np.ndarray:
         """
-        Compute the Riemann source term S(ρ).
+        Compute the Riemann source term S(rho).
 
-        Returns energy injection rate (erg/cm³/s).
+        Returns energy injection rate (erg/cm^3/s).
         """
         rho = np.atleast_1d(rho)
         log_rho_ratio = np.log(rho / self.rho_0)
@@ -285,12 +285,12 @@ class ReactiveEulerSolver:
     1D Reactive Euler equations for degenerate plasma.
 
     Conservation laws:
-        ∂ρ/∂t + ∂(ρu)/∂x = 0                      (mass)
-        ∂(ρu)/∂t + ∂(ρu² + P)/∂x = 0              (momentum)
-        ∂E/∂t + ∂((E + P)u)/∂x = S_nuc + S_Riemann (energy)
-        ∂(ρX_C)/∂t + ∂(ρX_C·u)/∂x = -ω            (Carbon mass fraction)
+        drho/dt + d(rhou)/dx = 0                      (mass)
+        d(rhou)/dt + d(rhou^2 + P)/dx = 0              (momentum)
+        dE/dt + d((E + P)u)/dx = S_nuc + S_Riemann (energy)
+        d(rhoX_C)/dt + d(rhoX_C·u)/dx = -omega            (Carbon mass fraction)
 
-    where E = ρe + ½ρu² is total energy density.
+    where E = rhoe + ½rhou^2 is total energy density.
 
     Numerical method: MUSCL-Hancock with HLL Riemann solver
     """
@@ -324,7 +324,7 @@ class ReactiveEulerSolver:
         else:
             self.riemann = None
 
-        # State variables: [ρ, ρu, E, ρX_C]
+        # State variables: [rho, rhou, E, rhoX_C]
         self.U = np.zeros((4, nx))
 
         # Diagnostics
@@ -364,10 +364,10 @@ class ReactiveEulerSolver:
         e_total = e_deg + e_thermal
 
         # Set conservative variables
-        self.U[0] = rho                      # ρ
-        self.U[1] = rho * u                  # ρu
+        self.U[0] = rho                      # rho
+        self.U[1] = rho * u                  # rhou
         self.U[2] = rho * e_total + 0.5 * rho * u**2  # E
-        self.U[3] = rho * X_C                # ρX_C
+        self.U[3] = rho * X_C                # rhoX_C
 
         self.time = 0.0
 
@@ -447,7 +447,7 @@ class ReactiveEulerSolver:
         """
         Compute source terms for energy and species equations.
 
-        S = [0, 0, S_nuc + S_Riemann, -ω]
+        S = [0, 0, S_nuc + S_Riemann, -omega]
         """
         S = np.zeros((4, len(rho)))
 
@@ -608,7 +608,7 @@ def plot_comparison(solver_std: ReactiveEulerSolver,
     ax1.plot(solver_std.x / 1e5, rho_std / 1e9, 'b-', label='Standard', linewidth=2)
     ax1.plot(solver_riemann.x / 1e5, rho_r / 1e9, 'r--', label='Riemann', linewidth=2)
     ax1.set_xlabel('Position (km)')
-    ax1.set_ylabel('Density (10⁹ g/cm³)')
+    ax1.set_ylabel('Density (10⁹ g/cm^3)')
     ax1.set_title('Density Profile')
     ax1.legend()
     ax1.grid(True, alpha=0.3)
@@ -710,9 +710,9 @@ def plot_riemann_resonance_structure(save_path: Optional[str] = None):
         if 1e8 < rho_res < 1e10:
             ax1.axvline(rho_res, color='blue', linestyle=':', alpha=0.5)
 
-    ax1.set_xlabel('Density (g/cm³)')
-    ax1.set_ylabel('Source Term (10²⁴ erg/cm³/s)')
-    ax1.set_title(f'Riemann Resonance Source (γ = {GAMMA_1:.2f})')
+    ax1.set_xlabel('Density (g/cm^3)')
+    ax1.set_ylabel('Source Term (10^2^4 erg/cm^3/s)')
+    ax1.set_title(f'Riemann Resonance Source (gamma = {GAMMA_1:.2f})')
     ax1.grid(True, alpha=0.3)
 
     # Log-density oscillation
@@ -721,8 +721,8 @@ def plot_riemann_resonance_structure(save_path: Optional[str] = None):
 
     ax2.plot(log_rho, np.cos(GAMMA_1 * log_rho), 'g-', linewidth=2)
     ax2.axhline(y=0, color='black', linestyle='-', linewidth=0.5)
-    ax2.set_xlabel('ln(ρ/ρ₀)')
-    ax2.set_ylabel('cos(γ₁ · ln(ρ/ρ₀))')
+    ax2.set_xlabel('ln(rho/rho_0)')
+    ax2.set_ylabel('cos(gamma_1 · ln(rho/rho_0))')
     ax2.set_title('Log-Periodic Oscillation Structure')
     ax2.grid(True, alpha=0.3)
 
@@ -761,9 +761,9 @@ def run_ddt_test(riemann_alpha: float = 1e15, t_max: float = 5e-4):
     print("="*70)
 
     print(f"\nParameters:")
-    print(f"  Riemann frequency: γ₁ = {GAMMA_1:.6f}")
-    print(f"  Coupling strength: α = {riemann_alpha:.2e} erg/g/s")
-    print(f"  Central density: ρ₀ = {RHO_CENTRAL:.2e} g/cm³")
+    print(f"  Riemann frequency: gamma_1 = {GAMMA_1:.6f}")
+    print(f"  Coupling strength: alpha = {riemann_alpha:.2e} erg/g/s")
+    print(f"  Central density: rho_0 = {RHO_CENTRAL:.2e} g/cm^3")
     print(f"  Simulation time: {t_max:.2e} s")
 
     # Visualize resonance structure
@@ -816,7 +816,7 @@ def run_ddt_test(riemann_alpha: float = 1e15, t_max: float = 5e-4):
         print(f"    Both models detonated. Riemann was {dt:.2f} ms {'faster' if dt > 0 else 'slower'}.")
     else:
         print("    Neither model triggered detonation in this configuration.")
-        print("    Try increasing α or running longer.")
+        print("    Try increasing alpha or running longer.")
 
     return solver_std, solver_riemann
 

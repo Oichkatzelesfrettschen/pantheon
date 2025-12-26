@@ -1,0 +1,96 @@
+% H0-Omega_m Posterior Contours
+% Shows degeneracy between parameters
+
+\begin{tikzpicture}
+    \begin{axis}[
+        width=0.95\columnwidth,
+        height=6cm,
+        xlabel={$H_0$ (km/s/Mpc)},
+        ylabel={$\Omega_\mathrm{m}$},
+        xmin=68, xmax=78,
+        ymin=0.2, ymax=0.5,
+        grid=major,
+        grid style={gridgray, thin},
+        legend pos=north east,
+        legend style={draw=none, fill=white, fill opacity=0.9, font=\footnotesize},
+    ]
+
+    % 95% confidence contour (outer) - LambdaCDM
+    \draw[cosmoblue, thick, fill=cosmoblue, fill opacity=0.1]
+        (axis cs:72.97, 0.351) ellipse [
+            x radius=2.5,
+            y radius=0.06,
+            rotate=25
+        ];
+
+    % 68% confidence contour (inner) - LambdaCDM
+    \draw[cosmoblue, very thick, fill=cosmoblue, fill opacity=0.2]
+        (axis cs:72.97, 0.351) ellipse [
+            x radius=1.2,
+            y radius=0.03,
+            rotate=25
+        ];
+
+    % Best fit point LambdaCDM
+    \node[
+        circle,
+        fill=cosmoblue,
+        inner sep=2pt
+    ] at (axis cs:72.97, 0.351) {};
+
+    % Spandrel contours (marginalized over epsilon)
+    \draw[detored, thick, dashed, fill=detored, fill opacity=0.05]
+        (axis cs:72.83, 0.394) ellipse [
+            x radius=3.0,
+            y radius=0.08,
+            rotate=30
+        ];
+
+    \draw[detored, thick, dashed, fill=detored, fill opacity=0.1]
+        (axis cs:72.83, 0.394) ellipse [
+            x radius=1.5,
+            y radius=0.04,
+            rotate=30
+        ];
+
+    % Best fit point Spandrel
+    \node[
+        circle,
+        fill=detored,
+        inner sep=2pt
+    ] at (axis cs:72.83, 0.394) {};
+
+    % Planck prior band
+    \fill[astrogreen, opacity=0.15]
+        (axis cs:66.9, 0.2) rectangle (axis cs:67.9, 0.5);
+    \draw[astrogreen, thick]
+        (axis cs:67.4, 0.2) -- (axis cs:67.4, 0.5);
+    \node[astrogreen, font=\tiny, rotate=90, anchor=south] at (axis cs:67.4, 0.35)
+        {Planck 2018};
+
+    % SH0ES prior band
+    \fill[flameorange, opacity=0.15]
+        (axis cs:72.0, 0.2) rectangle (axis cs:74.0, 0.5);
+    \draw[flameorange, thick]
+        (axis cs:73.0, 0.2) -- (axis cs:73.0, 0.5);
+    \node[flameorange, font=\tiny, rotate=90, anchor=south] at (axis cs:73.0, 0.45)
+        {SH0ES};
+
+    % Legend
+    \addlegendimage{area legend, cosmoblue, fill=cosmoblue, fill opacity=0.2}
+    \addlegendentry{$\Lambda$CDM}
+    \addlegendimage{area legend, detored, fill=detored, fill opacity=0.1, dashed}
+    \addlegendentry{Spandrel}
+
+    % Hubble tension annotation
+    \draw[{Stealth[length=2mm]}-{Stealth[length=2mm]}, thick, gray]
+        (axis cs:67.4, 0.25) -- (axis cs:73.0, 0.25);
+    \node[gray, font=\tiny, anchor=south] at (axis cs:70.2, 0.25) {$\sim 5\sigma$ tension};
+
+    % Degeneracy direction
+    \draw[-{Stealth[length=2mm]}, nucpurple, thick]
+        (axis cs:71, 0.32) -- (axis cs:75, 0.42)
+        node[midway, below right, font=\tiny, nucpurple] {degeneracy};
+
+    \end{axis}
+\end{tikzpicture}
