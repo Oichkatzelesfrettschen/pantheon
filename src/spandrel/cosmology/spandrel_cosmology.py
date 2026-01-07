@@ -25,105 +25,19 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Optional, Dict, Any
 import warnings
 warnings.filterwarnings('ignore')
+from pathlib import Path
 
 # Import physical constants from central module
 from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT, H0_FIDUCIAL, H0_PLANCK, H0_SH0ES, OMEGA_M_FIDUCIAL, GAMMA_1, RIEMANN_ZEROS
-
-
-class PantheonPlusLoader:
-    """
-    Loader for the Pantheon+SH0ES supernova dataset.
-
-    The dataset contains 1,701 Type Ia supernova observations with:
-    - zHD: Hubble Diagram redshift (corrected for peculiar velocities)
-    - MU_SH0ES: Distance modulus calibrated to Cepheid distances
-    - MU_SH0ES_ERR_DIAG: Diagonal error (statistical uncertainty)
-    """
-
-    def __init__(self, filepath: str = "Pantheon+SH0ES.dat"):
-        self.filepath = filepath
-        self.dataframe = None
-        self.z_obs = None
-        self.mu_obs = None
-        self.mu_err = None
-        self.metadata = {}
-
-    def load(self, z_min: float = 0.001, z_max: float = 2.5) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Load and parse the Pantheon+SH0ES dataset.
-
-        Args:
-            z_min: Minimum redshift cutoff (default 0.001 to avoid peculiar velocity noise)
-            z_max: Maximum redshift cutoff
-
-        Returns:
-            z_obs: Observed redshifts (zHD)
-            mu_obs: Observed distance moduli (MU_SH0ES)
-            mu_err: Measurement errors (MU_SH0ES_ERR_DIAG)
-        """
-        print(f"Loading Pantheon+ dataset from: {self.filepath}")
-
-        try:
-            self.dataframe = pd.read_csv(self.filepath, sep=r'\s+')
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Dataset not found at {self.filepath}\n"
-                "Download from: https://github.com/PantheonPlusSH0ES/DataRelease"
-            )
-
-        # Extract key columns
-        z_raw = self.dataframe['zHD'].values
-        mu_raw = self.dataframe['MU_SH0ES'].values
-        err_raw = self.dataframe['MU_SH0ES_ERR_DIAG'].values
-
-        # Apply redshift cuts and validity mask
-        mask = (z_raw > z_min) & (z_raw < z_max) & (mu_raw > 0) & np.isfinite(mu_raw) & np.isfinite(err_raw)
-
-        self.z_obs = z_raw[mask]
-        self.mu_obs = mu_raw[mask]
-        self.mu_err = err_raw[mask]
-
-        # Sort by redshift
-        sort_idx = np.argsort(self.z_obs)
-        self.z_obs = self.z_obs[sort_idx]
-        self.mu_obs = self.mu_obs[sort_idx]
-        self.mu_err = self.mu_err[sort_idx]
-
-        # Store metadata
-        self.metadata = {
-            'total_raw': len(z_raw),
-            'total_valid': len(self.z_obs),
-            'z_range': (self.z_obs.min(), self.z_obs.max()),
-            'mu_range': (self.mu_obs.min(), self.mu_obs.max()),
-            'surveys': self.dataframe['IDSURVEY'].nunique() if 'IDSURVEY' in self.dataframe else 'N/A',
-            'calibrators': self.dataframe['IS_CALIBRATOR'].sum() if 'IS_CALIBRATOR' in self.dataframe else 0
-        }
-
-        print(f"  Total supernovae: {self.metadata['total_raw']}")
-        print(f"  Valid after cuts: {self.metadata['total_valid']}")
-        print(f"  Redshift range: z = {self.metadata['z_range'][0]:.4f} to {self.metadata['z_range'][1]:.4f}")
-        print(f"  Calibrator SNe: {self.metadata['calibrators']}")
-
-        return self.z_obs, self.mu_obs, self.mu_err
-
-    def get_calibrator_subset(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Return only Cepheid-calibrated supernovae (for H0 anchoring)."""
-        if self.dataframe is None:
-            self.load()
-        mask = self.dataframe['IS_CALIBRATOR'] == 1
-        return (
-            self.dataframe.loc[mask, 'zHD'].values,
-            self.dataframe.loc[mask, 'MU_SH0ES'].values,
-            self.dataframe.loc[mask, 'MU_SH0ES_ERR_DIAG'].values
-        )
-
-    def get_hubble_flow_subset(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Return only Hubble flow supernovae (z > 0.01)."""
-        if self.z_obs is None:
-            self.load()
-        mask = self.z_obs > 0.01
-        return self.z_obs[mask], self.mu_obs[mask], self.mu_err[mask]
-
+from spandrel.core.data_interface import PantheonData
+try:
+    from spandrel_core.cosmology import distance_modulus_lcdm as distance_modulus_lcdm_core
+    from spandrel_core.likelihood import chi2_diagonal as chi2_diagonal_core
+except ImportError as exc:
+    raise ImportError(
+        "spandrel-core is required for distance modulus calculations; install it "
+        "or ensure the sibling `spandrel-core/src` is on PYTHONPATH."
+    ) from exc
 
 class SpandrelCosmology:
     """
@@ -179,8 +93,7 @@ class SpandrelCosmology:
         """
         Standard LambdaCDM distance modulus: mu = 5*log10(D_L/10pc)
         """
-        d_L = self.luminosity_distance(z)
-        return 5.0 * np.log10(d_L * 1e6 / 10.0)  # Convert Mpc to pc
+        return float(distance_modulus_lcdm_core(z, Om0=self.Omega_m, H0=self.H0))
 
     def distance_modulus(self, z: float) -> float:
         """Alias for distance_modulus_lcdm."""
@@ -250,7 +163,7 @@ class SpandrelFitter:
         mu_model = cosmo.distance_modulus_array(self.z_obs, use_spandrel=use_spandrel)
 
         residuals = (self.mu_obs - mu_model) / self.mu_err
-        return np.sum(residuals**2)
+        return chi2_diagonal_core(self.mu_obs - mu_model, self.mu_err)
 
     def fit_lcdm(self, initial_guess: Tuple[float, float] = (70.0, 0.3)) -> Dict[str, Any]:
         """
@@ -594,8 +507,9 @@ def run_full_analysis(data_path: str = "Pantheon+SH0ES.dat"):
     print("="*70)
 
     # 1. Load data
-    loader = PantheonPlusLoader(data_path)
-    z_obs, mu_obs, mu_err = loader.load()
+    data = PantheonData(filepath=Path(data_path))
+    z_obs, mu_obs, mu_err = data.get_cosmology_data()
+    meta = data.validate()
 
     # 2. Fit models
     fitter = SpandrelFitter(z_obs, mu_obs, mu_err)
@@ -666,8 +580,8 @@ def run_full_analysis(data_path: str = "Pantheon+SH0ES.dat"):
     print("ANALYSIS SUMMARY")
     print("="*70)
     print(f"""
-    Dataset: Pantheon+ ({loader.metadata['total_valid']} Type Ia Supernovae)
-    Redshift Range: z = {loader.metadata['z_range'][0]:.4f} to {loader.metadata['z_range'][1]:.4f}
+    Dataset: Pantheon+ ({meta['total_entries']} Type Ia Supernovae)
+    Redshift Range: z = {meta['redshift_range'][0]:.4f} to {meta['redshift_range'][1]:.4f}
 
     LambdaCDM Best Fit:
       H_0 = {lcdm_result['H0']:.2f} km/s/Mpc

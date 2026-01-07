@@ -27,6 +27,10 @@ warnings.filterwarnings('ignore')
 
 # Import physical constants from central module
 from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT, H0_FIDUCIAL, H0_PLANCK, H0_SH0ES, OMEGA_M_FIDUCIAL, GAMMA_1, RIEMANN_ZEROS
+try:
+    from spandrel_core.likelihood import chi2_diagonal as chi2_diagonal_core
+except ImportError:  # pragma: no cover
+    chi2_diagonal_core = None
 
 # Set publication-quality defaults
 plt.rcParams.update({
@@ -569,7 +573,10 @@ class Chi2ContourPlot:
 
                 cosmo = VectorizedCosmology(params)
                 mu_model = cosmo.distance_modulus_spandrel_vectorized(self.z_obs)
-                chi2_grid[i, j] = np.sum(((self.mu_obs - mu_model) / self.mu_err)**2)
+                if chi2_diagonal_core is None:
+                    chi2_grid[i, j] = np.sum(((self.mu_obs - mu_model) / self.mu_err) ** 2)
+                else:
+                    chi2_grid[i, j] = chi2_diagonal_core(self.mu_obs - mu_model, self.mu_err)
 
         return chi2_grid
 
