@@ -69,10 +69,16 @@ class TestCLICosmology:
     """CLI cosmology subcommand routing."""
 
     def test_cosmology_calls_run_analysis(self):
+        import importlib
         import sys
 
         from spandrel.cli import main
-        with patch('spandrel.analysis.run_analysis.run_analysis') as mock_fn, \
+        # spandrel.analysis.__init__ re-exports run_analysis, which shadows
+        # the submodule in the spandrel.analysis namespace.  Obtain the real
+        # module via importlib to ensure patch.object targets the module, not
+        # the function object.
+        ra_mod = importlib.import_module('spandrel.analysis.run_analysis')
+        with patch.object(ra_mod, 'run_analysis') as mock_fn, \
              patch.object(sys, 'argv', ['spandrel', 'cosmology']):
             main()
         mock_fn.assert_called_once()
@@ -80,10 +86,12 @@ class TestCLICosmology:
         assert call_kwargs.get('quick_mode') is False
 
     def test_cosmology_quick_flag(self):
+        import importlib
         import sys
 
         from spandrel.cli import main
-        with patch('spandrel.analysis.run_analysis.run_analysis') as mock_fn, \
+        ra_mod = importlib.import_module('spandrel.analysis.run_analysis')
+        with patch.object(ra_mod, 'run_analysis') as mock_fn, \
              patch.object(sys, 'argv', ['spandrel', 'cosmology', '--quick']):
             main()
         call_kwargs = mock_fn.call_args.kwargs
