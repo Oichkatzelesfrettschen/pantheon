@@ -13,13 +13,9 @@ Run with: pytest tests/test_cosmology.py -v
 
 import numpy as np
 import pytest
-from pathlib import Path
-import sys
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from spandrel.cosmology.spandrel_cosmology import SpandrelCosmology, SpandrelFitter
 from spandrel.core.constants import C_LIGHT_KMS, H0_FIDUCIAL, OMEGA_M_FIDUCIAL
+from spandrel.cosmology.spandrel_cosmology import SpandrelCosmology, SpandrelFitter
 
 
 class TestHubbleParameter:

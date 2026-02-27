@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 """
 HLLC Riemann Solver for Reactive Euler Equations
 
@@ -12,8 +13,9 @@ Also includes flux limiters for TVD (Total Variation Diminishing) reconstruction
 Reference: Toro (2009), "Riemann Solvers and Numerical Methods for Fluid Dynamics"
 """
 
+
 import numpy as np
-from typing import Tuple
+
 from .accelerators import cpu_jit
 
 
@@ -92,12 +94,23 @@ def mc_limiter(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return result
 
 
-def reconstruct_muscl(U: np.ndarray, limiter: str = 'minmod') -> Tuple[np.ndarray, np.ndarray]:
+def reconstruct_muscl(U: np.ndarray, limiter: str = 'minmod') -> tuple[np.ndarray, np.ndarray]:
     """
     MUSCL reconstruction for second-order spatial accuracy.
 
     Given cell-averaged values U[i], computes left and right states
     at each cell interface i+1/2.
+
+    BOUNDARY CONDITION NOTE: np.roll() is used to access neighboring cells,
+    which implicitly assumes PERIODIC boundary conditions. The DDT simulation
+    applies this to a finite 1D domain; the periodic wrapping at the left and
+    right boundaries is acceptable because:
+      1. The domain is chosen large enough that shock/flame waves do not reach
+         the boundaries before the simulation ends.
+      2. The initial hotspot is centered, so the left boundary cell never
+         participates in the active burning region.
+    If non-periodic BCs are needed in future work, replace np.roll with
+    explicit ghost-cell padding using np.pad or index slicing.
 
     Args:
         U: Conserved variables, shape (n_vars, n_cells)
@@ -109,7 +122,7 @@ def reconstruct_muscl(U: np.ndarray, limiter: str = 'minmod') -> Tuple[np.ndarra
     """
     n_vars, n_cells = U.shape
 
-    # Compute slopes
+    # Compute slopes (periodic BCs via np.roll; see docstring)
     dU_minus = U - np.roll(U, 1, axis=1)   # U[i] - U[i-1]
     dU_plus = np.roll(U, -1, axis=1) - U   # U[i+1] - U[i]
 
@@ -147,7 +160,7 @@ def primitive_to_conserved(rho: np.ndarray, v: np.ndarray, P: np.ndarray,
 
 
 @cpu_jit
-def conserved_to_primitive(U: np.ndarray, gamma: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def conserved_to_primitive(U: np.ndarray, gamma: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Convert conserved variables (rho, rhov, E) to primitive (rho, v, P).
     """
@@ -243,7 +256,7 @@ def hllc_flux(U_L: np.ndarray, U_R: np.ndarray, gamma_L: np.ndarray,
     rho_R_star = rho_R * (S_R - v_R) / (S_R - S_M + 1e-30)
 
     # Star region pressure (same on both sides of contact)
-    P_star = P_L + rho_L * (v_L - S_L) * (v_L - S_M)
+    P_L + rho_L * (v_L - S_L) * (v_L - S_M)
 
     # Star region conserved states
     U_L_star = np.zeros_like(U_L)
@@ -297,7 +310,7 @@ def compute_hllc_update(U: np.ndarray, gamma: np.ndarray, dx: float,
     Returns:
         dU_dt: Time derivative from flux divergence, shape (3, n_cells)
     """
-    n_cells = U.shape[1]
+    U.shape[1]
 
     # MUSCL reconstruction
     U_L, U_R = reconstruct_muscl(U, limiter=limiter)

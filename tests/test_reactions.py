@@ -13,21 +13,17 @@ Run with: pytest tests/test_reactions.py -v
 
 import numpy as np
 import pytest
-from pathlib import Path
-import sys
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
+from spandrel.core.constants import K_BOLTZMANN, M_PROTON, Q_BURN
 from spandrel.ddt.reaction_carbon import (
-    screening_factor,
-    c12_c12_rate,
-    reaction_rate_c12,
-    burn_substep,
-    burn_step_subcycled,
-    chapman_jouguet_velocity,
     Q_EFF,
+    burn_step_subcycled,
+    burn_substep,
+    c12_c12_rate,
+    chapman_jouguet_velocity,
+    reaction_rate_c12,
+    screening_factor,
 )
-from spandrel.core.constants import Q_BURN, K_BOLTZMANN, M_PROTON
 
 
 class TestScreeningFactor:

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Unified Simulation Runner: Spandrel Project Elevated Edition
 
@@ -15,11 +16,11 @@ Usage:
     python run_all.py --quick      # Fast verification only
 """
 
-import numpy as np
 import argparse
 import time
-import sys
 from pathlib import Path
+
+import numpy as np
 
 # Add paths
 from spandrel.core.constants import M_SUN
@@ -43,8 +44,8 @@ def run_cosmology_comparison(quick: bool = False):
 
     # Summary
     print("\n[OK] Cosmology module complete")
-    print(f"  Best model: LambdaCDM (as expected from simulated data)")
-    print(f"  Riemann status: RULED OUT by Bayes factor")
+    print("  Best model: LambdaCDM (as expected from simulated data)")
+    print("  Riemann status: RULED OUT by Bayes factor")
 
     return output
 
@@ -53,7 +54,7 @@ def run_nuclear_network():
     """Test alpha-chain nuclear network."""
     print_header("MODULE 2: alpha-CHAIN NUCLEAR NETWORK")
 
-    from .alpha_chain_network import AlphaChainNetwork, Isotope, ISOTOPES
+    from .alpha_chain_network import ISOTOPES, AlphaChainNetwork, Isotope
 
     network = AlphaChainNetwork()
 
@@ -68,10 +69,10 @@ def run_nuclear_network():
 
     result = network.burn_to_completion(rho, T, X_init, t_max=0.01)
 
-    print(f"\nNuclear burning test:")
-    print(f"  Initial: 50% C12, 50% O16")
+    print("\nNuclear burning test:")
+    print("  Initial: 50% C12, 50% O16")
     print(f"  Conditions: rho = {rho:.1e} g/cm^3, T = {T:.1e} K")
-    print(f"\n  Final composition:")
+    print("\n  Final composition:")
     for iso in Isotope:
         X = result['X_final'][iso]
         if X > 0.01:
@@ -116,7 +117,7 @@ def run_ddt_simulation():
     Ni56_fraction = np.mean(solver.T > T_NSE)
     M_Ni = Ni56_fraction * 1.4 * M_SUN
 
-    print(f"\n[OK] DDT simulation complete")
+    print("\n[OK] DDT simulation complete")
     print(f"  Detonation: {'YES' if solver.detonation_detected else 'NO'}")
     print(f"  Shock velocity: {solver.shock_velocity:.2e} cm/s")
     print(f"  NSE fraction: {Ni56_fraction*100:.0f}%")
@@ -135,14 +136,14 @@ def run_light_curve(M_Ni: float):
     data = generator.generate()
     obs = data['observables']
 
-    print(f"\nSynthesized observables:")
+    print("\nSynthesized observables:")
     print(f"  Rise time: {obs['t_rise']:.1f} days")
     print(f"  Peak time: {obs['t_peak']:.1f} days")
     print(f"  Peak luminosity: {obs['L_peak']:.2e} erg/s")
     print(f"  Peak M_B: {obs['M_B_peak']:.2f}")
     print(f"  Δm_1₅(B): {obs['delta_m15']:.2f}")
 
-    print(f"\nPhillips relation:")
+    print("\nPhillips relation:")
     print(f"  Predicted: M_B = {obs['M_B_phillips']:.2f}")
     print(f"  Actual:    M_B = {obs['M_B_peak']:.2f}")
     residual = obs['M_B_peak'] - obs['M_B_phillips']
@@ -185,11 +186,27 @@ def run_parameter_study():
     return study
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Spandrel Project: Elevated Simulations')
-    parser.add_argument('--full', action='store_true', help='Run all simulations including parameter study')
-    parser.add_argument('--quick', action='store_true', help='Quick verification only')
-    args = parser.parse_args()
+def main(*, quick: bool = False, full: bool = False):
+    """Run the elevated simulation suite.
+
+    Parameters
+    ----------
+    quick:
+        When True, skip long-running modules for fast verification.
+    full:
+        When True, include the optional DDT parameter study.
+    """
+    # Support being called from the command line with argparse, but also
+    # accept keyword arguments directly so callers (e.g. cli.py) do not
+    # need to mutate sys.argv.
+    import sys as _sys
+    if len(_sys.argv) > 1 and _sys.argv[0].endswith('run_all.py'):
+        parser = argparse.ArgumentParser(description='Spandrel Project: Elevated Simulations')
+        parser.add_argument('--full', action='store_true', help='Run all simulations including parameter study')
+        parser.add_argument('--quick', action='store_true', help='Quick verification only')
+        _args = parser.parse_args()
+        quick = _args.quick
+        full = _args.full
 
     start_time = time.time()
 
@@ -199,10 +216,10 @@ def main():
     print("+" + "=" * 68 + "+")
 
     # Module 1: Cosmology
-    cosmo_output = run_cosmology_comparison(quick=args.quick)
+    run_cosmology_comparison(quick=quick)
 
     # Module 2: Nuclear Network
-    nuclear_output = run_nuclear_network()
+    run_nuclear_network()
 
     # Module 3: DDT Simulation
     solver, M_Ni = run_ddt_simulation()
@@ -211,8 +228,8 @@ def main():
     lc_data = run_light_curve(M_Ni)
 
     # Module 5: Parameter Study (optional)
-    if args.full and not args.quick:
-        param_study = run_parameter_study()
+    if full and not quick:
+        run_parameter_study()
     else:
         print("\n[Skipping parameter study - use --full to include]")
 

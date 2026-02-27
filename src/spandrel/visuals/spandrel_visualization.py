@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Spandrel Cosmology Visualization Suite
 ======================================
@@ -15,18 +16,18 @@ Features:
 Author: Spandrel Cosmology Project
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import gridspec
-from matplotlib.colors import LinearSegmentedColormap
-from scipy.stats import gaussian_kde
-from typing import Dict, List, Optional, Tuple, Any
 import warnings
+from typing import Any, Optional
 
-warnings.filterwarnings('ignore')
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import gridspec
+from scipy.stats import gaussian_kde
+
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='numpy')
 
 # Import physical constants from central module
-from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT, H0_FIDUCIAL, H0_PLANCK, H0_SH0ES, OMEGA_M_FIDUCIAL, GAMMA_1, RIEMANN_ZEROS
 try:
     from spandrel_core.likelihood import chi2_diagonal as chi2_diagonal_core
 except ImportError:  # pragma: no cover
@@ -63,8 +64,8 @@ class CornerPlot:
     Generate corner plots for MCMC posterior visualization.
     """
 
-    def __init__(self, samples: np.ndarray, labels: List[str],
-                 truths: Optional[List[float]] = None,
+    def __init__(self, samples: np.ndarray, labels: list[str],
+                 truths: Optional[list[float]] = None,
                  color: str = COLORS['spandrel']):
         self.samples = samples
         self.labels = labels
@@ -72,13 +73,15 @@ class CornerPlot:
         self.color = color
         self.n_params = samples.shape[1]
 
-    def plot(self, figsize: Tuple[int, int] = None,
-             quantiles: List[float] = [0.16, 0.5, 0.84],
+    def plot(self, figsize: tuple[int, int] = None,
+             quantiles: list[float] = None,
              show_titles: bool = True,
              save_path: Optional[str] = None) -> plt.Figure:
         """
         Create corner plot showing 1D and 2D marginalized posteriors.
         """
+        if quantiles is None:
+            quantiles = [0.16, 0.5, 0.84]
         if figsize is None:
             figsize = (3 * self.n_params, 3 * self.n_params)
 
@@ -113,7 +116,7 @@ class CornerPlot:
         return fig
 
     def _plot_1d_hist(self, ax: plt.Axes, param_idx: int,
-                      quantiles: List[float], show_titles: bool):
+                      quantiles: list[float], show_titles: bool):
         """Plot 1D marginalized posterior."""
         data = self.samples[:, param_idx]
 
@@ -194,7 +197,7 @@ class HubbleDiagramPlot:
         self.mu_obs = mu_obs
         self.mu_err = mu_err
 
-    def plot_comparison(self, models: Dict[str, Dict[str, Any]],
+    def plot_comparison(self, models: dict[str, dict[str, Any]],
                         save_path: Optional[str] = None) -> plt.Figure:
         """
         Plot Hubble diagram comparing multiple models.
@@ -213,7 +216,7 @@ class HubbleDiagramPlot:
                     label=f'Pantheon+ ({len(self.z_obs)} SNe Ia)', zorder=1)
 
         # Model curves
-        z_model = np.logspace(np.log10(self.z_obs.min()), np.log10(self.z_obs.max()), 500)
+        np.logspace(np.log10(self.z_obs.min()), np.log10(self.z_obs.max()), 500)
 
         for name, model in models.items():
             color = COLORS.get(name.lower(), 'purple')
@@ -263,7 +266,7 @@ class HubbleDiagramPlot:
 
         return fig
 
-    def _plot_residuals(self, ax: plt.Axes, model: Dict, name: str):
+    def _plot_residuals(self, ax: plt.Axes, model: dict, name: str):
         """Plot residuals for a single model."""
         # Interpolate model to data redshifts
         mu_model_at_data = np.interp(self.z_obs, model['z'], model['mu'])
@@ -364,7 +367,7 @@ class HubbleTensionPlot:
     Visualize the Hubble tension and how Spandrel might resolve it.
     """
 
-    def __init__(self, mcmc_results: Dict[str, Dict]):
+    def __init__(self, mcmc_results: dict[str, dict]):
         self.mcmc_results = mcmc_results
 
     def plot(self, save_path: Optional[str] = None) -> plt.Figure:
@@ -439,7 +442,7 @@ class ModelComparisonPlot:
     Visualize model comparison statistics.
     """
 
-    def __init__(self, mle_results: Dict, evidence_results: Optional[Dict] = None):
+    def __init__(self, mle_results: dict, evidence_results: Optional[dict] = None):
         self.mle_results = mle_results
         self.evidence_results = evidence_results
 
@@ -552,9 +555,9 @@ class Chi2ContourPlot:
 
     def compute_chi2_grid(self, H0_range: np.ndarray, param2_range: np.ndarray,
                           param2_name: str = 'epsilon',
-                          fixed_params: Dict = None) -> np.ndarray:
+                          fixed_params: dict = None) -> np.ndarray:
         """Compute chi-squared on a parameter grid."""
-        from spandrel.cosmology.spandrel_cosmology_hpc import VectorizedCosmology, CosmologyParams
+        from spandrel.cosmology.spandrel_cosmology_hpc import CosmologyParams, VectorizedCosmology
 
         chi2_grid = np.zeros((len(param2_range), len(H0_range)))
 
@@ -580,7 +583,7 @@ class Chi2ContourPlot:
 
         return chi2_grid
 
-    def plot(self, best_fit: Dict, save_path: Optional[str] = None) -> plt.Figure:
+    def plot(self, best_fit: dict, save_path: Optional[str] = None) -> plt.Figure:
         """Create chi-squared contour plot."""
         fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -672,7 +675,7 @@ def create_publication_figures(pipeline, output_dir: str = "."):
         hubble_plot = HubbleDiagramPlot(pipeline.z_obs, pipeline.mu_obs, pipeline.mu_err)
 
         # Generate model curves
-        from spandrel.cosmology.spandrel_cosmology_hpc import VectorizedCosmology, CosmologyParams
+        from spandrel.cosmology.spandrel_cosmology_hpc import VectorizedCosmology
 
         z_model = np.logspace(np.log10(pipeline.z_obs.min()),
                               np.log10(pipeline.z_obs.max()), 500)

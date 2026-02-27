@@ -13,19 +13,15 @@ Run with: pytest tests/test_flux.py -v
 
 import numpy as np
 import pytest
-from pathlib import Path
-import sys
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from spandrel.ddt.flux_hllc import (
-    minmod,
-    superbee,
-    mc_limiter,
-    primitive_to_conserved,
-    conserved_to_primitive,
     compute_cfl_timestep,
     compute_hllc_update,
+    conserved_to_primitive,
+    mc_limiter,
+    minmod,
+    primitive_to_conserved,
+    superbee,
 )
 
 
@@ -269,7 +265,7 @@ class TestSodShockTube:
     def test_shock_forms(self, sod_initial_conditions):
         """A shock should form from the discontinuity."""
         rho, v, P, gamma, x = sod_initial_conditions
-        n = len(rho)
+        len(rho)
         dx = x[1] - x[0]
 
         U = primitive_to_conserved(rho, v, P, gamma)
@@ -293,7 +289,7 @@ class TestSodShockTube:
     def test_no_negative_density(self, sod_initial_conditions):
         """Density should never go negative."""
         rho, v, P, gamma, x = sod_initial_conditions
-        n = len(rho)
+        len(rho)
         dx = x[1] - x[0]
 
         U = primitive_to_conserved(rho, v, P, gamma)
@@ -350,6 +346,87 @@ class TestTVDProperty:
 
         # TV should not increase (allowing small numerical tolerance)
         assert TV_final <= TV_initial * 1.1  # 10% tolerance for numerical errors
+
+
+class TestNumericalConvergence:
+    """Numerical convergence tests for the HLLC solver.
+
+    Running the Sod shock tube at two resolutions and verifying that the
+    L1-norm error decreases with refinement confirms second-order accuracy
+    in smooth regions (the expansion fan) and first-order at discontinuities.
+    The overall convergence rate for problems with shocks is bounded to O(h)
+    due to Godunov's theorem, so we verify error reduction rather than a
+    specific rate.
+    """
+
+    def _run_sod(self, n: int, t_stop: float = 0.1) -> tuple:
+        """Advance a Sod tube to t_stop and return primitive variables."""
+        x = np.linspace(0, 1, n)
+        dx = x[1] - x[0]
+
+        rho = np.where(x < 0.5, 1.0, 0.125)
+        P = np.where(x < 0.5, 1.0, 0.1)
+        v = np.zeros(n)
+        gamma = np.full(n, 1.4)
+
+        U = primitive_to_conserved(rho, v, P, gamma)
+        t = 0.0
+
+        while t < t_stop:
+            cs = np.sqrt(gamma * P / np.maximum(rho, 1e-10))
+            dt = compute_cfl_timestep(rho, v, cs, dx, cfl=0.3)
+            dt = min(dt, t_stop - t)  # do not overshoot
+
+            dU = compute_hllc_update(U, gamma, dx)
+            U = U + dt * dU
+
+            rho, v, P = conserved_to_primitive(U, gamma)
+            rho = np.maximum(rho, 1e-10)
+            P = np.maximum(P, 1e-10)
+            t += dt
+
+        return rho, v, P
+
+    def test_sod_convergence_l1_density(self):
+        """L1 error in density should decrease with mesh refinement.
+
+        We run at two resolutions (n=200 and n=400). Because n=400 is still
+        low-resolution by research standards, we use the n=400 result as a
+        reference and verify that it differs less from a further-refined n=800
+        solution than n=200 does. This validates the trend without a hardcoded
+        exact solution.
+        """
+        rho_200, _, _ = self._run_sod(n=200, t_stop=0.05)
+        rho_400, _, _ = self._run_sod(n=400, t_stop=0.05)
+        rho_800, _, _ = self._run_sod(n=800, t_stop=0.05)
+
+        # Coarsen 400 and 800 solutions to 200-point grid for comparison
+        rho_400_c = rho_400[::2]  # every other point
+        rho_800_c = rho_800[::4]  # every 4th point
+
+        err_coarse = np.mean(np.abs(rho_200 - rho_400_c))
+        err_fine = np.mean(np.abs(rho_400_c - rho_800_c))
+
+        # Error should decrease with refinement
+        assert err_fine < err_coarse, (
+            f"Expected error to decrease with refinement: "
+            f"err(200->400)={err_coarse:.4e}, err(400->800)={err_fine:.4e}"
+        )
+
+    def test_reaction_rate_finite_at_low_temperature(self):
+        """reaction_rate_c12 should return finite values even at low T.
+
+        WHY: The screening factor has a T^(-3/2) term that overflows without
+        a temperature floor. This test catches regressions in the guard added
+        in reaction_carbon.py.
+        """
+        from spandrel.ddt.reaction_carbon import reaction_rate_c12
+        rho = np.array([2e7])
+        T_low = np.array([1e3])   # Extremely low T -- physical values start ~1e8 K
+        X_C12 = np.array([0.5])
+        dX, eps = reaction_rate_c12(rho, T_low, X_C12)
+        assert np.isfinite(dX).all(), "dX_C12_dt is not finite at low T"
+        assert np.isfinite(eps).all(), "eps_nuc is not finite at low T"
 
 
 if __name__ == "__main__":

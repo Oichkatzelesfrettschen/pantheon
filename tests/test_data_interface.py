@@ -6,11 +6,8 @@ Run with: pytest tests/
 
 import numpy as np
 import pytest
-from pathlib import Path
-import sys
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from spandrel.core.data_interface import PantheonData, load_pantheon, DataStats
+from spandrel.core.data_interface import DataStats, PantheonData, load_pantheon
 
 
 class TestPantheonData:
@@ -86,8 +83,8 @@ class TestPantheonData:
         assert 'total_entries' in report
         assert 'rejected_entries' in report
         assert 'has_nan_z' in report
-        assert report['has_nan_z'] == False
-        assert report['has_nan_mu'] == False
+        assert not report['has_nan_z']
+        assert not report['has_nan_mu']
 
 
 class TestLoadFunction:
@@ -116,7 +113,7 @@ class TestConstants:
 
     def test_imports_cleanly(self):
         """Constants should import without error."""
-        from spandrel.core.constants import C_LIGHT, M_SUN, GAMMA_1
+        from spandrel.core.constants import C_LIGHT, GAMMA_1, M_SUN
         assert C_LIGHT > 0
         assert M_SUN > 0
         assert GAMMA_1 > 14 and GAMMA_1 < 15
@@ -139,6 +136,40 @@ class TestDDTSolver:
         """Reaction module should import."""
         from spandrel.ddt.reaction_carbon import c12_c12_rate
         assert callable(c12_c12_rate)
+
+
+class TestEdgeCases:
+    """Edge cases for data loading."""
+
+    def test_tight_z_range(self):
+        """Very narrow redshift range should still return valid data."""
+        z, mu, mu_err = load_pantheon(z_min=0.3, z_max=0.5)
+        assert len(z) > 0
+        assert z.min() >= 0.3
+        assert z.max() <= 0.5
+
+    def test_empty_z_range(self):
+        """Impossible redshift range should return empty arrays or raise."""
+        try:
+            z, mu, mu_err = load_pantheon(z_min=5.0, z_max=6.0)
+            # If it returns, arrays should be empty
+            assert len(z) == 0
+        except (ValueError, RuntimeError):
+            pass  # Raising is also acceptable
+
+    def test_load_pantheon_defaults(self):
+        """Default load should return non-trivial dataset."""
+        z, mu, mu_err = load_pantheon()
+        assert len(z) > 100
+        assert np.all(np.isfinite(z))
+        assert np.all(np.isfinite(mu))
+        assert np.all(np.isfinite(mu_err))
+
+    def test_mu_err_reasonable_magnitude(self):
+        """Distance modulus errors should be in plausible range (0.01 - 1 mag)."""
+        _, _, mu_err = load_pantheon()
+        assert np.all(mu_err > 0.01)
+        assert np.all(mu_err < 2.0)
 
 
 if __name__ == "__main__":

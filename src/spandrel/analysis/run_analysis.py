@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Spandrel Cosmology Analysis Runner
 ==================================
@@ -16,14 +17,9 @@ Author: Spandrel Cosmology Project
 """
 
 import argparse
+import os
 import sys
 import time
-import os
-
-# Ensure we're using all available CPU threads
-os.environ['OMP_NUM_THREADS'] = str(os.cpu_count())
-os.environ['MKL_NUM_THREADS'] = str(os.cpu_count())
-os.environ['OPENBLAS_NUM_THREADS'] = str(os.cpu_count())
 
 
 def print_banner():
@@ -84,12 +80,12 @@ def check_dependencies():
 
     # Optional GPU acceleration
     try:
-        import mlx.core as mx
-        deps['mlx'] = f"[OK] MLX (Metal GPU) available"
+        import mlx.core as mx  # noqa: F401
+        deps['mlx'] = "[OK] MLX (Metal GPU) available"
     except ImportError:
         deps['mlx'] = "( ) MLX not installed (optional, pip install mlx)"
 
-    for name, status in deps.items():
+    for _name, status in deps.items():
         print(f"  {status}")
 
     return True, deps
@@ -145,50 +141,65 @@ Examples:
     return parser.parse_args()
 
 
-def run_analysis(args):
-    """Run the main analysis pipeline."""
+def run_analysis(
+    *,
+    quick_mode: bool = False,
+    data_path: str = 'Pantheon+SH0ES.dat',
+    output_dir: str = 'results',
+    mcmc_only: bool = False,
+    mcmc_samples: int = 5000,
+    mcmc_chains: int = None,
+    evidence_live: int = 300,
+    no_plots: bool = False,
+    z_min: float = 0.001,
+    z_max: float = 2.5,
+):
+    """Run the main analysis pipeline.
+
+    All parameters are keyword-only so that callers (CLI, scripts, notebooks)
+    can pass exactly what they need without constructing an argparse Namespace.
+    """
     from spandrel.cosmology.spandrel_cosmology_hpc import (
+        NUM_CORES,
         SpandrelAnalysisPipeline,
-        PantheonPlusLoaderHPC,
-        NUM_CORES
     )
 
     # Create output directory
-    os.makedirs(args.output_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
 
     # Initialize pipeline
-    print(f"\n[OBS] Initializing Spandrel Analysis Pipeline...")
-    print(f"   Data file: {args.data}")
-    print(f"   Output directory: {args.output_dir}")
+    print("\n[OBS] Initializing Spandrel Analysis Pipeline...")
+    print(f"   Data file: {data_path}")
+    print(f"   Output directory: {output_dir}")
 
-    pipeline = SpandrelAnalysisPipeline(args.data)
+    pipeline = SpandrelAnalysisPipeline(data_path)
 
     # Load data
-    print(f"\n[DATA] Loading Pantheon+ supernova data...")
-    pipeline.load_data(z_min=args.z_min, z_max=args.z_max)
+    print("\n[DATA] Loading Pantheon+ supernova data...")
+    pipeline.load_data(z_min=z_min, z_max=z_max)
 
     # Maximum likelihood estimation
-    print(f"\n[FIT] Running Maximum Likelihood Estimation...")
+    print("\n[FIT] Running Maximum Likelihood Estimation...")
     start_mle = time.time()
-    mle_results = pipeline.fit_mle()
+    pipeline.fit_mle()
     mle_time = time.time() - start_mle
     print(f"   MLE completed in {mle_time:.2f}s")
 
     # Likelihood ratio test
-    print(f"\n[CALC] Performing Likelihood Ratio Test...")
+    print("\n[CALC] Performing Likelihood Ratio Test...")
     lr_result = pipeline.likelihood_ratio_test()
 
     # MCMC sampling
-    if not args.quick:
-        print(f"\n[LINK] Running Parallel MCMC Sampling...")
-        print(f"   Samples per chain: {args.mcmc_samples}")
-        print(f"   Number of chains: {args.mcmc_chains or NUM_CORES}")
+    if not quick_mode:
+        print("\n[LINK] Running Parallel MCMC Sampling...")
+        print(f"   Samples per chain: {mcmc_samples}")
+        print(f"   Number of chains: {mcmc_chains or NUM_CORES}")
 
         start_mcmc = time.time()
         mcmc_results = pipeline.run_mcmc(
-            n_samples=args.mcmc_samples,
-            n_burn=min(2000, args.mcmc_samples // 2),
-            n_chains=args.mcmc_chains
+            n_samples=mcmc_samples,
+            n_burn=min(2000, mcmc_samples // 2),
+            n_chains=mcmc_chains
         )
         mcmc_time = time.time() - start_mcmc
         print(f"   MCMC completed in {mcmc_time:.2f}s")
@@ -196,17 +207,17 @@ def run_analysis(args):
         # Save MCMC chains
         import numpy as np
         for name, result in mcmc_results.items():
-            chain_file = os.path.join(args.output_dir, f'mcmc_chain_{name}.npy')
+            chain_file = os.path.join(output_dir, f'mcmc_chain_{name}.npy')
             np.save(chain_file, result['chains'])
             print(f"   Saved chain to: {chain_file}")
 
     # Nested sampling for evidence
-    if not args.quick and not args.mcmc_only:
-        print(f"\n[STAT] Computing Bayesian Evidence (Nested Sampling)...")
-        print(f"   Live points: {args.evidence_live}")
+    if not quick_mode and not mcmc_only:
+        print("\n[STAT] Computing Bayesian Evidence (Nested Sampling)...")
+        print(f"   Live points: {evidence_live}")
 
         start_evidence = time.time()
-        evidence_results = pipeline.compute_evidence(n_live=args.evidence_live)
+        pipeline.compute_evidence(n_live=evidence_live)
         evidence_time = time.time() - start_evidence
         print(f"   Evidence computation completed in {evidence_time:.2f}s")
 
@@ -214,22 +225,22 @@ def run_analysis(args):
     pipeline.summary_report()
 
     # Generate visualizations
-    if not args.no_plots:
-        print(f"\n[PLOT] Generating publication figures...")
+    if not no_plots:
+        print("\n[PLOT] Generating publication figures...")
         try:
             from spandrel_visualization import create_publication_figures
-            create_publication_figures(pipeline, args.output_dir)
+            create_publication_figures(pipeline, output_dir)
         except ImportError as e:
             print(f"   Warning: Could not generate plots: {e}")
 
     # Save summary to file
-    summary_file = os.path.join(args.output_dir, 'analysis_summary.txt')
+    summary_file = os.path.join(output_dir, 'analysis_summary.txt')
     with open(summary_file, 'w') as f:
         f.write("SPANDREL COSMOLOGY ANALYSIS SUMMARY\n")
         f.write("="*50 + "\n\n")
 
         f.write(f"Dataset: Pantheon+ ({pipeline.loader.metadata.get('total_valid', 'N/A')} SNe Ia)\n")
-        f.write(f"Redshift range: z = {args.z_min:.4f} to {args.z_max:.4f}\n\n")
+        f.write(f"Redshift range: z = {z_min:.4f} to {z_max:.4f}\n\n")
 
         f.write("MLE RESULTS:\n")
         f.write("-"*30 + "\n")
@@ -241,13 +252,13 @@ def run_analysis(args):
                 f.write(f"  epsilon = {result.params.epsilon:.8f}\n")
             f.write(f"  chi2/dof = {result.reduced_chi2:.6f}\n")
 
-        f.write(f"\nLIKELIHOOD RATIO TEST:\n")
+        f.write("\nLIKELIHOOD RATIO TEST:\n")
         f.write(f"  Delta chi2 = {lr_result['delta_chi2']:.4f}\n")
         f.write(f"  p-value = {lr_result['p_value']:.6f}\n")
         f.write(f"  Significance = {lr_result['sigma']:.2f} sigma\n")
 
         if 'mcmc' in pipeline.results:
-            f.write(f"\nMCMC POSTERIOR ESTIMATES:\n")
+            f.write("\nMCMC POSTERIOR ESTIMATES:\n")
             f.write("-"*30 + "\n")
             for name, result in pipeline.results['mcmc'].items():
                 f.write(f"\n{name.upper()}:\n")
@@ -255,7 +266,7 @@ def run_analysis(args):
                     f.write(f"  {param} = {stats['mean']:.6f} +/- {stats['std']:.6f}\n")
 
         if 'evidence' in pipeline.results:
-            f.write(f"\nBAYESIAN EVIDENCE:\n")
+            f.write("\nBAYESIAN EVIDENCE:\n")
             f.write("-"*30 + "\n")
             for name, evidence in pipeline.results['evidence'].items():
                 f.write(f"  {name}: log(Z) = {evidence.log_evidence:.4f} +/- {evidence.log_evidence_err:.4f}\n")
@@ -267,6 +278,14 @@ def run_analysis(args):
 
 def main():
     """Main entry point."""
+    # Set thread counts before importing NumPy/SciPy so they take effect.
+    # Done here rather than at import time to avoid side effects when the
+    # module is imported by other code (e.g. the CLI or tests).
+    n_cpu = str(os.cpu_count())
+    os.environ.setdefault('OMP_NUM_THREADS', n_cpu)
+    os.environ.setdefault('MKL_NUM_THREADS', n_cpu)
+    os.environ.setdefault('OPENBLAS_NUM_THREADS', n_cpu)
+
     print_banner()
 
     # Check dependencies
@@ -280,7 +299,6 @@ def main():
 
     # Set core limit if specified
     if args.cores:
-        import multiprocessing as mp
         # This affects the HPC module's NUM_CORES
         os.environ['OMP_NUM_THREADS'] = str(args.cores)
         print(f"\n[CONFIG]  Using {args.cores} CPU cores")
@@ -295,7 +313,18 @@ def main():
     start_total = time.time()
 
     try:
-        pipeline = run_analysis(args)
+        pipeline = run_analysis(
+            quick_mode=args.quick,
+            data_path=args.data,
+            output_dir=args.output_dir,
+            mcmc_only=args.mcmc_only,
+            mcmc_samples=args.mcmc_samples,
+            mcmc_chains=args.mcmc_chains,
+            evidence_live=args.evidence_live,
+            no_plots=args.no_plots,
+            z_min=args.z_min,
+            z_max=args.z_max,
+        )
     except KeyboardInterrupt:
         print("\n\n[WARN]  Analysis interrupted by user")
         sys.exit(1)
@@ -305,7 +334,7 @@ def main():
 
     total_time = time.time() - start_total
 
-    print(f"\n[OK] Analysis complete!")
+    print("\n[OK] Analysis complete!")
     print(f"   Total time: {total_time:.2f}s ({total_time/60:.1f} min)")
     print(f"   Results saved to: {args.output_dir}/")
 

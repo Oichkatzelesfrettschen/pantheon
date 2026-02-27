@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Elevated Spandrel Project Modules
 
@@ -8,13 +9,17 @@ Contains research-grade simulation tools:
     - ddt_parameter_study: Systematic DDT exploration
 """
 
-from .model_comparison import (
-    LambdaCDM, wCDM, CPL, RiemannResonance,
-    NestedSampler, compute_bayes_factors
-)
-from .alpha_chain_network import AlphaChainNetwork, Isotope, ISOTOPES
-from .light_curve_synthesis import LightCurveGenerator, ArnettModel
+from .alpha_chain_network import ISOTOPES, AlphaChainNetwork, Isotope
 from .ddt_parameter_study import DDTParameterStudy, run_single_simulation
+from .light_curve_synthesis import ArnettModel, LightCurveGenerator
+from .model_comparison import (
+    CPL,
+    LambdaCDM,
+    NestedSampler,
+    RiemannResonance,
+    compute_bayes_factors,
+    wCDM,
+)
 
 __all__ = [
     'LambdaCDM', 'wCDM', 'CPL', 'RiemannResonance',

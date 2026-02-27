@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Turbulent Flame Theory for Type Ia Supernovae
 
@@ -20,24 +21,12 @@ Reference:
     - Röpke (2007), ApJ 668, 1103
 """
 
-import numpy as np
 from dataclasses import dataclass
-from typing import Tuple, Dict, Callable
-from scipy.integrate import odeint
-from scipy.optimize import brentq
-import sys
-sys.path.insert(0, '..')
+
+import numpy as np
 
 from spandrel.core.constants import (
-    C_LIGHT_CGS as C_LIGHT,
-    K_BOLTZMANN,
-    M_PROTON,
     M_SUN,
-    DAY,
-    RHO_DDT,
-    R_WD,
-    TAU_NI56,
-    TAU_CO56
 )
 
 # White dwarf parameters (module-specific)
@@ -318,7 +307,7 @@ class TurbulentSupernovaModel:
 
         return f_Ni56 * 1.4  # Scale to Chandrasekhar mass (M_sun)
 
-    def phillips_relation(self) -> Tuple[float, float]:
+    def phillips_relation(self) -> tuple[float, float]:
         """
         Derive Phillips relation parameters from fractal dimension.
 
@@ -334,7 +323,7 @@ class TurbulentSupernovaModel:
 
         return delta_m15, M_B_peak
 
-    def critical_gradient_analysis(self, L_range: np.ndarray = None) -> Dict:
+    def critical_gradient_analysis(self, L_range: np.ndarray = None) -> dict:
         """
         Analyze DDT probability vs gradient length.
 
@@ -388,33 +377,33 @@ if __name__ == "__main__":
     # Initialize model
     model = TurbulentSupernovaModel(L_integral=1e7, u_rms=1e7)
 
-    print(f"\nTurbulence Parameters:")
+    print("\nTurbulence Parameters:")
     print(f"  Integral scale: {model.cascade.L_integral/1e5:.0f} km")
     print(f"  RMS velocity: {model.cascade.u_rms/1e5:.0f} km/s")
     print(f"  Kolmogorov scale: {model.cascade.lambda_k:.2e} cm")
     print(f"  Reynolds number: {model.cascade.Re:.2e}")
 
-    print(f"\nFractal Flame:")
+    print("\nFractal Flame:")
     print(f"  Fractal dimension D: {model.flame.D_fractal:.3f}")
     print(f"  S_turbulent / S_laminar: {model.flame.S_turbulent/model.flame.S_laminar:.1f}")
     print(f"  Gibson scale: {model.flame.L_inner:.2e} cm")
 
-    print(f"\nZel'dovich Criticality:")
+    print("\nZel'dovich Criticality:")
     print(f"  tau_burn: {model.zeldovich.tau_burn:.2e} s")
     print(f"  lambda_crit: {model.zeldovich.lambda_crit/1e5:.1f} km")
     print(f"  c_s: {model.zeldovich.c_s:.2e} cm/s")
 
-    print(f"\nNi-56 Yield (Monte Carlo):")
+    print("\nNi-56 Yield (Monte Carlo):")
     M_Ni = model.compute_ni56_yield()
     print(f"  M_Ni = {M_Ni:.2f} MSun")
 
-    print(f"\nPhillips Relation Prediction:")
+    print("\nPhillips Relation Prediction:")
     delta_m15, M_B = model.phillips_relation()
     print(f"  Δm_1₅(B) = {delta_m15:.2f} mag")
     print(f"  M_B(peak) = {M_B:.2f} mag")
 
     # Critical gradient analysis
-    print(f"\nCritical Gradient Analysis:")
+    print("\nCritical Gradient Analysis:")
     analysis = model.critical_gradient_analysis()
     print(f"  lambda_crit = {analysis['lambda_crit_km']:.1f} km")
 

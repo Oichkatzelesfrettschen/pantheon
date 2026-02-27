@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Riemann Resonance Cosmology
 ===========================
@@ -22,21 +23,25 @@ Physical Interpretation:
 Author: Spandrel Cosmology Project
 """
 
+import warnings
+from typing import Optional
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.optimize import differential_evolution, minimize
-from scipy.stats import chi2, norm
-from scipy.integrate import quad
-from dataclasses import dataclass
-from typing import Tuple, Dict, List, Optional
-import matplotlib.pyplot as plt
-import warnings
+from scipy.stats import chi2
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='numpy')
 
 # Import physical constants from central module
-from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT, H0_FIDUCIAL, H0_PLANCK, H0_SH0ES, OMEGA_M_FIDUCIAL, GAMMA_1, RIEMANN_ZEROS
-
+from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT
+from spandrel.core.constants import (
+    GAMMA_1,
+    RIEMANN_ZEROS,
+)
+from spandrel.visuals.utils import show_or_close
 
 # =============================================================================
 # RIEMANN RESONANCE COSMOLOGY ENGINE
@@ -120,7 +125,7 @@ class RiemannCosmology:
     def comoving_distance(self, z: np.ndarray, n_steps: int = 500) -> np.ndarray:
         """Vectorized comoving distance calculation."""
         z = np.atleast_1d(z)
-        n_z = len(z)
+        len(z)
 
         z_grid = np.linspace(0, z, n_steps).T
         E_grid = self.E(z_grid)
@@ -218,7 +223,7 @@ class RiemannResonanceFitter:
         """Chi-squared for standard LambdaCDM (A=0)."""
         return self.chi2_model(H0, Omega_m, 0.0, 0.0, use_prior)
 
-    def fit_lcdm(self, use_prior: bool = True) -> Dict:
+    def fit_lcdm(self, use_prior: bool = True) -> dict:
         """Fit standard LambdaCDM model."""
         print("\n  Fitting LambdaCDM (baseline)...")
 
@@ -246,7 +251,7 @@ class RiemannResonanceFitter:
             'effective_epsilon': 0.0
         }
 
-    def fit_riemann(self, use_prior: bool = True, n_harmonics: int = 1) -> Dict:
+    def fit_riemann(self, use_prior: bool = True, n_harmonics: int = 1) -> dict:
         """
         Fit Riemann-resonant model.
 
@@ -293,7 +298,7 @@ class RiemannResonanceFitter:
             'gamma': GAMMA_1
         }
 
-    def fit_multi_harmonic(self, n_harmonics: int = 3, use_prior: bool = True) -> Dict:
+    def fit_multi_harmonic(self, n_harmonics: int = 3, use_prior: bool = True) -> dict:
         """Fit model with multiple Riemann harmonics."""
         print(f"\n  Fitting Multi-Harmonic Riemann ({n_harmonics} modes)...")
 
@@ -334,7 +339,7 @@ class RiemannResonanceFitter:
             'n_harmonics': n_harmonics
         }
 
-    def scan_frequency(self, gamma_range: np.ndarray, use_prior: bool = True) -> Dict:
+    def scan_frequency(self, gamma_range: np.ndarray, use_prior: bool = True) -> dict:
         """
         Scan over different frequencies to find the best-fit oscillation.
 
@@ -342,16 +347,15 @@ class RiemannResonanceFitter:
         """
         print("\n  Scanning frequency space...")
 
-        best_chi2 = np.inf
         chi2_values = []
 
         for gamma in gamma_range:
-            def objective(params):
+            def objective(params, _gamma=gamma):
                 H0, Om, A, phi = params
                 if H0 < 50 or H0 > 100 or Om < 0.1 or Om > 0.5 or A < 0 or A > 0.2:
                     return 1e10
 
-                cosmo = RiemannCosmology(H0, Om, A, phi, gamma=gamma)
+                cosmo = RiemannCosmology(H0, Om, A, phi, gamma=_gamma)
                 mu_model = cosmo.distance_modulus(self.z_obs)
                 chi2_sn = np.sum(((self.mu_obs - mu_model)**2) * self.inv_var)
 
@@ -381,7 +385,7 @@ class RiemannResonanceFitter:
 # =============================================================================
 
 def plot_riemann_analysis(z_obs: np.ndarray, mu_obs: np.ndarray, mu_err: np.ndarray,
-                         lcdm_result: Dict, riemann_result: Dict,
+                         lcdm_result: dict, riemann_result: dict,
                          save_path: Optional[str] = None):
     """Create comprehensive Riemann resonance visualization."""
 
@@ -427,7 +431,7 @@ def plot_riemann_analysis(z_obs: np.ndarray, mu_obs: np.ndarray, mu_err: np.ndar
     ax2.axhline(y=1, color='gray', linestyle='--', alpha=0.5)
 
     # Mark Riemann zero crossings
-    log_z = np.log(1 + z_de)
+    np.log(1 + z_de)
     phase = riemann_result['phase']
     for n in range(-5, 10):
         z_node = np.exp((n * np.pi - phase) / GAMMA_1) - 1
@@ -483,10 +487,10 @@ def plot_riemann_analysis(z_obs: np.ndarray, mu_obs: np.ndarray, mu_err: np.ndar
         plt.savefig(save_path, dpi=150)
         print(f"  Saved plot to: {save_path}")
 
-    plt.show()
+    show_or_close(fig)
 
 
-def plot_frequency_scan(scan_result: Dict, save_path: Optional[str] = None):
+def plot_frequency_scan(scan_result: dict, save_path: Optional[str] = None):
     """Plot frequency scan results."""
     fig, ax = plt.subplots(figsize=(12, 6))
 
@@ -512,7 +516,7 @@ def plot_frequency_scan(scan_result: Dict, save_path: Optional[str] = None):
     if save_path:
         plt.savefig(save_path, dpi=150)
 
-    plt.show()
+    show_or_close(fig)
 
 
 # =============================================================================

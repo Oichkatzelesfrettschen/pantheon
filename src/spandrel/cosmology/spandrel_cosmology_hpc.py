@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Spandrel Cosmology HPC Analysis Framework
 ==========================================
@@ -17,39 +18,34 @@ Author: Spandrel Cosmology Project
 Hardware Target: Apple Silicon (M1/M2/M3) with Metal GPU
 """
 
+import multiprocessing as mp
+import time
+import warnings
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import dataclass, field
+from typing import Any, Optional
+
 import numpy as np
 import pandas as pd
-from scipy.integrate import quad_vec, solve_ivp
-from scipy.optimize import minimize, differential_evolution
+from scipy.optimize import differential_evolution
 from scipy.stats import chi2, norm
-from scipy.special import logsumexp
-from typing import Tuple, Optional, Dict, Any, List, Callable
-from dataclasses import dataclass, field
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-import multiprocessing as mp
-from functools import partial
-import warnings
-import time
-import os
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='numpy')
 
 # Import physical constants from central module
-from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT, H0_FIDUCIAL, H0_PLANCK, H0_SH0ES, OMEGA_M_FIDUCIAL, GAMMA_1, RIEMANN_ZEROS
+from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT
 
 # CPU core count for parallel operations
 NUM_CORES = mp.cpu_count()
-print(f"Detected {NUM_CORES} CPU cores for parallel computation")
 
 # Attempt to import MLX for Metal GPU acceleration
 try:
-    import mlx.core as mx
-    import mlx.nn as nn
+    import mlx.core as mx  # noqa: F401
+    import mlx.nn as nn  # noqa: F401
     HAS_MLX = True
-    print("MLX Metal GPU acceleration: AVAILABLE")
 except ImportError:
     HAS_MLX = False
-    print("MLX Metal GPU acceleration: NOT AVAILABLE (install with: pip install mlx)")
 
 
 # =============================================================================
@@ -80,7 +76,7 @@ class FitResult:
     reduced_chi2: float
     p_value: float
     model_name: str
-    errors: Dict[str, float] = field(default_factory=dict)
+    errors: dict[str, float] = field(default_factory=dict)
     covariance: Optional[np.ndarray] = None
     chain: Optional[np.ndarray] = None  # MCMC chain
 
@@ -155,7 +151,7 @@ class VectorizedCosmology:
         This is much faster than scipy.integrate.quad for arrays.
         """
         z = np.atleast_1d(z)
-        n_z = len(z)
+        len(z)
 
         # Create integration grid for all redshifts simultaneously
         # Shape: (n_steps, n_z)
@@ -415,7 +411,7 @@ class ParallelMCMC:
 
     def run_single_chain(self, chain_id: int, n_samples: int,
                          initial_params: np.ndarray, proposal_sigma: np.ndarray,
-                         use_spandrel: bool, seed: int) -> Tuple[np.ndarray, np.ndarray]:
+                         use_spandrel: bool, seed: int) -> tuple[np.ndarray, np.ndarray]:
         """
         Run a single MCMC chain using Metropolis-Hastings.
 
@@ -455,7 +451,7 @@ class ParallelMCMC:
 
     def run_parallel_chains(self, n_samples: int = 10000, n_burn: int = 2000,
                            use_spandrel: bool = True,
-                           initial_params: np.ndarray = None) -> Dict[str, Any]:
+                           initial_params: np.ndarray = None) -> dict[str, Any]:
         """
         Run multiple MCMC chains in parallel.
 
@@ -518,7 +514,7 @@ class ParallelMCMC:
             'elapsed_time': elapsed
         }
 
-    def _compute_diagnostics(self, chains: List[np.ndarray]) -> Dict[str, Any]:
+    def _compute_diagnostics(self, chains: list[np.ndarray]) -> dict[str, Any]:
         """
         Compute MCMC convergence diagnostics.
 
@@ -527,7 +523,7 @@ class ParallelMCMC:
         - Effective sample size
         - Autocorrelation time
         """
-        n_chains = len(chains)
+        len(chains)
         n_samples = chains[0].shape[0]
         n_params = chains[0].shape[1]
 
@@ -535,7 +531,7 @@ class ParallelMCMC:
         chain_means = np.array([np.mean(c, axis=0) for c in chains])
         chain_vars = np.array([np.var(c, axis=0, ddof=1) for c in chains])
 
-        overall_mean = np.mean(chain_means, axis=0)
+        np.mean(chain_means, axis=0)
 
         B = n_samples * np.var(chain_means, axis=0, ddof=1)  # Between-chain variance
         W = np.mean(chain_vars, axis=0)  # Within-chain variance
@@ -564,7 +560,7 @@ class ParallelMCMC:
         }
 
     def compute_statistics(self, chain: np.ndarray,
-                          param_names: List[str]) -> Dict[str, Dict[str, float]]:
+                          param_names: list[str]) -> dict[str, dict[str, float]]:
         """
         Compute posterior statistics from MCMC chain.
         """
@@ -649,7 +645,6 @@ class NestedSampler:
         print(f"\nRunning Nested Sampling ({'Spandrel' if use_spandrel else 'LambdaCDM'})...")
         print(f"  Live points: {self.n_live}")
 
-        n_params = 3 if use_spandrel else 2
 
         # Initialize live points from prior
         live_points = self.sample_prior(self.n_live, use_spandrel)
@@ -776,7 +771,7 @@ class PantheonPlusLoaderHPC:
         self.metadata = {}
 
     def load(self, z_min: float = 0.001, z_max: float = 2.5,
-             use_sh0es_calibration: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+             use_sh0es_calibration: bool = True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Load Pantheon+ data with optional SH0ES calibration.
         """
@@ -838,7 +833,7 @@ class PantheonPlusLoaderHPC:
 
         return self.z_obs, self.mu_obs, self.mu_err
 
-    def get_redshift_bins(self, n_bins: int = 10) -> List[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    def get_redshift_bins(self, n_bins: int = 10) -> list[tuple[np.ndarray, np.ndarray, np.ndarray]]:
         """Split data into redshift bins for systematic tests."""
         if self.z_obs is None:
             self.load()
@@ -885,7 +880,7 @@ class SpandrelAnalysisPipeline:
         self.z_obs, self.mu_obs, self.mu_err = self.loader.load(z_min, z_max)
         return self
 
-    def fit_mle(self, model: str = 'both') -> Dict[str, FitResult]:
+    def fit_mle(self, model: str = 'both') -> dict[str, FitResult]:
         """
         Maximum Likelihood Estimation for LambdaCDM and/or Spandrel.
         """
@@ -931,10 +926,8 @@ class SpandrelAnalysisPipeline:
         # Global optimization
         if use_spandrel:
             bounds = [(60, 85), (0.15, 0.45), (-0.3, 0.3)]
-            x0 = [70, 0.3, 0.0]
         else:
             bounds = [(60, 85), (0.15, 0.45)]
-            x0 = [70, 0.3]
 
         result = differential_evolution(
             objective, bounds, maxiter=2000, tol=1e-8, seed=42,
@@ -971,7 +964,7 @@ class SpandrelAnalysisPipeline:
         )
 
     def run_mcmc(self, model: str = 'both', n_samples: int = 10000,
-                 n_burn: int = 2000, n_chains: int = None) -> Dict[str, Dict]:
+                 n_burn: int = 2000, n_chains: int = None) -> dict[str, dict]:
         """
         Run parallel MCMC sampling for posterior estimation.
         """
@@ -1006,7 +999,7 @@ class SpandrelAnalysisPipeline:
         return results
 
     def compute_evidence(self, model: str = 'both',
-                        n_live: int = 500) -> Dict[str, BayesianEvidence]:
+                        n_live: int = 500) -> dict[str, BayesianEvidence]:
         """
         Compute Bayesian evidence using nested sampling.
         """
@@ -1041,7 +1034,7 @@ class SpandrelAnalysisPipeline:
         self.results['evidence'] = results
         return results
 
-    def likelihood_ratio_test(self) -> Dict[str, float]:
+    def likelihood_ratio_test(self) -> dict[str, float]:
         """
         Perform likelihood ratio test between LambdaCDM and Spandrel.
         """
@@ -1090,7 +1083,7 @@ class SpandrelAnalysisPipeline:
 
         if 'mle' in self.results:
             print("\n--- Maximum Likelihood Results ---")
-            for name, result in self.results['mle'].items():
+            for _, result in self.results['mle'].items():
                 print(f"\n{result.model_name}:")
                 print(f"  H_0 = {result.params.H0:.3f} km/s/Mpc")
                 print(f"  Omegaₘ = {result.params.Omega_m:.5f}")
@@ -1160,7 +1153,7 @@ def run_full_hpc_analysis(data_path: str = "Pantheon+SH0ES.dat",
     print("SPANDREL COSMOLOGY HPC ANALYSIS")
     print("Testing the Stiffness Hypothesis with Maximum Parallelism")
     print("="*70)
-    print(f"\nHardware Configuration:")
+    print("\nHardware Configuration:")
     print(f"  CPU Cores: {NUM_CORES}")
     print(f"  Metal GPU: {'Available (MLX)' if HAS_MLX else 'Not Available'}")
     print(f"  NumPy BLAS: {np.__config__.show() if hasattr(np.__config__, 'show') else 'Unknown'}")

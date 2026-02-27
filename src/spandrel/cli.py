@@ -1,6 +1,24 @@
+# SPDX-License-Identifier: GPL-2.0-only
+"""Command-line interface for Spandrel.
+
+Entry point registered in pyproject.toml as ``spandrel``.
+
+Subcommands
+-----------
+synthesis
+    Run the Unified Turbulence-Phillips Experiment.
+ddt
+    Run the Zel'dovich DDT 1D hydrodynamics simulation.
+cosmology
+    Run the Cosmological Analysis (MLE, MCMC, evidence).
+elevate
+    Run the full Elevated research suite.
+total
+    Run the High-Fidelity total analysis (all 1701 SNe Ia).
+"""
+
 import argparse
-import sys
-from pathlib import Path
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -9,8 +27,8 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Available modules")
 
     # Subcommand: synthesis (The Unified Experiment)
-    parser_synth = subparsers.add_parser("synthesis", help="Run the Unified Turbulence-Phillips Experiment")
-    
+    subparsers.add_parser("synthesis", help="Run the Unified Turbulence-Phillips Experiment")
+
     # Subcommand: ddt (The Simulation)
     parser_ddt = subparsers.add_parser("ddt", help="Run Zeldovich DDT Simulation")
     parser_ddt.add_argument("--quick", action="store_true", help="Run in low-res mode for verification")
@@ -24,7 +42,7 @@ def main():
     parser_elevate.add_argument("--quick", action="store_true", help="Skip long-running parameter studies")
 
     # Subcommand: total (High-Fidelity Total Analysis)
-    parser_total = subparsers.add_parser("total", help="Run High-Fidelity analysis of all 1701 supernovae")
+    subparsers.add_parser("total", help="Run High-Fidelity analysis of all 1701 supernovae")
 
     args = parser.parse_args()
 
@@ -46,7 +64,7 @@ def main():
             config = SimulationConfig(n_cells=128, max_steps=1000, verbose=True)
         else:
             config = SimulationConfig(n_cells=512, verbose=True)
-        
+
         solver = ZeldovichDDTSolver(config)
         solver.run()
 
@@ -58,13 +76,7 @@ def main():
     elif args.command == "elevate":
         from spandrel.elevated.run_all import main as run_elevated
         print("[NEW] Running Elevated Suite...")
-        # We need to hack sys.argv for the elevated script's argparse
-        sys.argv = [sys.argv[0]]
-        if args.quick:
-            sys.argv.append("--quick")
-        else:
-            sys.argv.append("--full")
-        run_elevated()
+        run_elevated(quick=args.quick)
 
     else:
         parser.print_help()

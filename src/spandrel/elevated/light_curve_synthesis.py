@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Light Curve Synthesis for Type Ia Supernovae
 
@@ -20,20 +21,22 @@ Reference:
     - Kasen (2010), ApJ 708, 1025
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 from dataclasses import dataclass
-from typing import Tuple, Dict, Optional
-from scipy.integrate import odeint
-from scipy.interpolate import interp1d
 from pathlib import Path
 
-import sys
-sys.path.insert(0, '..')
+import matplotlib.pyplot as plt
+import numpy as np
+
+from spandrel.core.constants import C_LIGHT_CGS as C_LIGHT
 from spandrel.core.constants import (
-    C_LIGHT_CGS as C_LIGHT, M_SUN, L_SUN, DAY, SIGMA_SB,
-    TAU_NI56, TAU_CO56, E_NI56, E_CO56, M_AMU
+    DAY,
+    L_SUN,
+    M_AMU,
+    M_SUN,
+    TAU_CO56,
+    TAU_NI56,
 )
+from spandrel.visuals.utils import show_or_close
 
 # Energy release per decay
 Q_NI56 = 1.75e6 * 1.602e-12   # MeV -> erg (gamma-rays)
@@ -122,7 +125,7 @@ class ArnettModel:
             # Numerical integration
             n_steps = 1000
             t_prime = np.linspace(0, ti, n_steps)
-            dt = t_prime[1] - t_prime[0] if len(t_prime) > 1 else 0
+            t_prime[1] - t_prime[0] if len(t_prime) > 1 else 0
 
             Q = radioactive_heating(t_prime, self.M_Ni)
             integrand = Q * 2 * t_prime / self.tau_m**2 * np.exp((t_prime / self.tau_m)**2)
@@ -173,8 +176,14 @@ def phillips_relation(delta_m15: float) -> float:
 
 
 def compute_delta_m15(model: ArnettModel) -> float:
-    """
-    Compute Δm_1₅ (decline rate) from light curve model.
+    """Compute Δm_1₅ (decline rate) from light curve model.
+
+    RESOLUTION NOTE: The time grid uses a fixed 1000-point resolution over
+    5-30 days. This gives a timestep of ~25 seconds per point, which is more
+    than adequate for resolving the ~15-day decline rate. If sub-day precision
+    is needed (e.g. early-time rise fitting), increase the grid density or
+    restrict the range. The choice of 5 days as t_min avoids the pre-maximum
+    rise where Arnett's model is less accurate.
     """
     # Find peak
     t_grid = np.linspace(5 * DAY, 30 * DAY, 1000)
@@ -210,7 +219,7 @@ class LightCurveGenerator:
         self.model = ArnettModel(M_ej=M_ej, M_Ni=M_Ni, v_exp=v_exp, kappa=kappa)
 
     def generate(self, t_start: float = 0, t_end: float = 100 * DAY,
-                 n_points: int = 500) -> Dict:
+                 n_points: int = 500) -> dict:
         """
         Generate complete light curve data.
 
@@ -355,7 +364,7 @@ class LightCurveGenerator:
                        facecolor='#0d1117', edgecolor='none')
             print(f"Saved: {save_path}")
 
-        plt.show()
+        show_or_close(fig)
 
 
 # =============================================================================
@@ -369,7 +378,7 @@ if __name__ == "__main__":
     # From our DDT simulation: M_Ni = 1.04 M_sun
     M_Ni_sim = 1.04 * M_SUN
 
-    print(f"\nInput from DDT simulation:")
+    print("\nInput from DDT simulation:")
     print(f"  Ni-56 mass: {M_Ni_sim/M_SUN:.2f} MSun")
 
     # Generate light curve
@@ -377,22 +386,22 @@ if __name__ == "__main__":
     data = generator.generate()
     obs = data['observables']
 
-    print(f"\nSynthesized observables:")
+    print("\nSynthesized observables:")
     print(f"  Rise time: {obs['t_rise']:.1f} days")
     print(f"  Peak luminosity: {obs['L_peak']:.2e} erg/s")
     print(f"  Peak M_B: {obs['M_B_peak']:.2f}")
     print(f"  Δm_1₅(B): {obs['delta_m15']:.2f}")
 
-    print(f"\nPhillips relation check:")
+    print("\nPhillips relation check:")
     print(f"  Predicted from Δm_1₅: M_B = {obs['M_B_phillips']:.2f}")
     print(f"  Actual from model:   M_B = {obs['M_B_peak']:.2f}")
     residual = obs['M_B_peak'] - obs['M_B_phillips']
     print(f"  Residual: {residual:+.2f} mag")
 
     if abs(residual) < 0.3:
-        print(f"\n  [OK] CONSISTENT with Phillips relation!")
+        print("\n  [OK] CONSISTENT with Phillips relation!")
     else:
-        print(f"\n  ⚠ Deviation from Phillips relation")
+        print("\n  ⚠ Deviation from Phillips relation")
 
     # Plot
     generator.plot(save_path=Path(__file__).parent / 'light_curve.png')

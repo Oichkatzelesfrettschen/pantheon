@@ -1,7 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0-only
 from __future__ import annotations
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 
 def _ensure_spandrel_core_importable() -> None:
@@ -10,11 +11,15 @@ def _ensure_spandrel_core_importable() -> None:
     Pantheon is a submodule in the OpenUniverse meta-repo. The canonical Spandrel
     core lives in the sibling submodule `spandrel-core/`. This helper avoids
     duplicating core primitives inside Pantheon.
+
+    The sys.path manipulation here is intentional: it is the single place where
+    we resolve the sibling-submodule layout. All other modules import via the
+    installed `spandrel` package and must NOT add their own sys.path entries.
     """
     try:
         import spandrel_core  # noqa: F401
         return
-    except Exception:
+    except ImportError:
         pass
 
     pantheon_dir = Path(__file__).resolve().parents[2]
@@ -26,7 +31,7 @@ def _ensure_spandrel_core_importable() -> None:
     # natural ImportError if `spandrel_core` is truly unavailable.
     try:
         import spandrel_core  # noqa: F401
-    except Exception:
+    except ImportError:
         return
 
 
