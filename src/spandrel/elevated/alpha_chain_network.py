@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Elevated Nuclear Network: 13-Isotope alpha-Chain
 
@@ -15,13 +16,11 @@ Reference:
     - Calder et al. (2007), ApJ 656, 313
 """
 
-import numpy as np
 from dataclasses import dataclass
-from typing import Dict, Tuple, List
 from enum import IntEnum
 
-import sys
-sys.path.insert(0, '..')
+import numpy as np
+
 from spandrel.core.constants import K_BOLTZMANN, M_PROTON, M_SUN, MEV_TO_ERG
 
 # Module-specific constants
@@ -136,7 +135,7 @@ def q_value(reactant: Isotope, product: Isotope) -> float:
     """
     r_data = ISOTOPES[reactant]
     p_data = ISOTOPES[product]
-    he4_data = ISOTOPES[Isotope.He4]
+    ISOTOPES[Isotope.He4]
 
     # Binding energy difference
     delta_B = p_data.B - r_data.B
@@ -166,7 +165,7 @@ def nse_composition(rho: float, T: float, Y_e: float = 0.5) -> np.ndarray:
         X: Mass fraction array for all isotopes
     """
     T9 = T / 1e9
-    kT = K_BOLTZMANN * T / MEV_TO_ERG  # kT in MeV
+    K_BOLTZMANN * T / MEV_TO_ERG  # kT in MeV
 
     X = np.zeros(N_SPECIES)
 
@@ -218,7 +217,7 @@ class AlphaChainNetwork:
         for target, product in self.reactions:
             self.q_values[(target, product)] = q_value(target, product)
 
-    def compute_rates(self, rho: float, T: float, X: np.ndarray) -> Tuple[np.ndarray, float]:
+    def compute_rates(self, rho: float, T: float, X: np.ndarray) -> tuple[np.ndarray, float]:
         """
         Compute time derivatives dX/dt and energy generation rate.
 
@@ -280,7 +279,7 @@ class AlphaChainNetwork:
         return dX_dt, eps
 
     def integrate(self, rho: float, T: float, X: np.ndarray, dt: float,
-                  method: str = 'backward_euler') -> Tuple[np.ndarray, float]:
+                  method: str = 'backward_euler') -> tuple[np.ndarray, float]:
         """
         Integrate network for one timestep.
 
@@ -310,7 +309,7 @@ class AlphaChainNetwork:
 
                 # Jacobian approximation (diagonal dominance)
                 J_diag = np.ones(N_SPECIES)
-                for i, (target, _) in enumerate(self.reactions):
+                for _i, (target, _) in enumerate(self.reactions):
                     if X_new[target] > 1e-10:
                         J_diag[target] = 1 + dt * np.abs(dX_dt[target]) / X_new[target]
 
@@ -328,7 +327,7 @@ class AlphaChainNetwork:
         return X_new, delta_e
 
     def burn_to_completion(self, rho: float, T: float, X_init: np.ndarray,
-                           t_max: float = 1.0) -> Dict:
+                           t_max: float = 1.0) -> dict:
         """
         Burn until fuel exhausted or time limit reached.
 
@@ -438,7 +437,7 @@ if __name__ == "__main__":
 
         result = network.burn_to_completion(rho, T, X_init, t_max=0.1)
 
-        print(f"\nFinal composition:")
+        print("\nFinal composition:")
         for iso in Isotope:
             X = result['X_final'][iso]
             if X > 0.01:

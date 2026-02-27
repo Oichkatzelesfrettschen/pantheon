@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Equation of State for White Dwarf Matter
 
@@ -15,22 +16,20 @@ Where:
 Reference: Timmes & Swesty (2000), ApJS 126, 501
 """
 
-import numpy as np
 from dataclasses import dataclass
-from typing import Tuple
-import sys
-sys.path.insert(0, '..')
+
+import numpy as np
+
 from spandrel.core.constants import (
-    C_LIGHT_CGS as C_LIGHT,
+    A_BAR,
+    A_RAD,
+    HBAR,
     K_BOLTZMANN,
     M_ELECTRON,
     M_PROTON,
-    A_RAD,
-    HBAR,
-    A_BAR,
-    Z_BAR,
-    Y_E
+    Y_E,
 )
+from spandrel.core.constants import C_LIGHT_CGS as C_LIGHT
 
 
 @dataclass
@@ -125,7 +124,7 @@ def energy_degenerate(rho: np.ndarray) -> np.ndarray:
     # Simplified: use thermodynamic relation e = integralP/rho^2 drho
     # For relativistic case, approximate:
     sqrt_term = np.sqrt(x**2 + 1.0)
-    g_x = 3.0 * (x * sqrt_term * (1.0 + 2.0*x**2) - np.arcsinh(x)) / (8.0 * x**3 + 1e-30)
+    3.0 * (x * sqrt_term * (1.0 + 2.0*x**2) - np.arcsinh(x)) / (8.0 * x**3 + 1e-30)
 
     e_fermi = M_ELECTRON * C_LIGHT**2 * (sqrt_term - 1.0)
     return n_e * e_fermi / rho

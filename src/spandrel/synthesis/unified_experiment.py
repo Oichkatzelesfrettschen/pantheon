@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Unified Experiment: Complete Spandrel Synthesis
 
@@ -18,48 +19,41 @@ The experiment validates the central thesis:
      not a mystery of nuclear physics."
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-from dataclasses import dataclass
-from typing import Dict, List
-import sys
 import time
 from pathlib import Path
 
-from spandrel.core.constants import (
-    C_LIGHT_CGS as C_LIGHT,
-    K_BOLTZMANN,
-    M_PROTON,
-    M_SUN,
-    DAY,
-    RHO_DDT,
-    R_WD,
-    TAU_NI56,
-    TAU_CO56
-)
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.gridspec import GridSpec
 
-# Import all synthesis modules
-from .turbulent_flame_theory import (
-    KolmogorovCascade, FractalFlame, ZeldovichCriticality,
-    TurbulentSupernovaModel
-)
-from .phillips_from_turbulence import (
-    PhillipsFromTurbulence, SNIaPopulationSynthesis, PhillipsObservations
+from spandrel.core.constants import (
+    M_SUN,
 )
 
 # Import DDT solver
 from spandrel.ddt.main_zeldovich import SimulationConfig, ZeldovichDDTSolver
-from spandrel.ddt.flux_hllc import conserved_to_primitive
 
 # Import light curve synthesis
-from spandrel.elevated.light_curve_synthesis import LightCurveGenerator, ArnettModel
+from spandrel.elevated.light_curve_synthesis import LightCurveGenerator
+from spandrel.visuals.utils import show_or_close
+
+from .phillips_from_turbulence import (
+    PhillipsFromTurbulence,
+    PhillipsObservations,
+    SNIaPopulationSynthesis,
+)
+
+# Import all synthesis modules
+from .turbulent_flame_theory import (
+    FractalFlame,
+    TurbulentSupernovaModel,
+)
 
 
 # =============================================================================
 # EXPERIMENT 1: CRITICAL GRADIENT DETERMINATION
 # =============================================================================
-def experiment_critical_gradient(verbose: bool = True) -> Dict:
+def experiment_critical_gradient(verbose: bool = True) -> dict:
     """
     Experiment 1: Determine the critical gradient length lambda_crit.
 
@@ -140,7 +134,7 @@ def experiment_critical_gradient(verbose: bool = True) -> Dict:
 # =============================================================================
 # EXPERIMENT 2: FRACTAL DIMENSION SWEEP
 # =============================================================================
-def experiment_fractal_sweep(verbose: bool = True) -> Dict:
+def experiment_fractal_sweep(verbose: bool = True) -> dict:
     """
     Experiment 2: Sweep fractal dimension and compute Ni-56 yields.
 
@@ -198,7 +192,7 @@ def experiment_fractal_sweep(verbose: bool = True) -> Dict:
 # =============================================================================
 # EXPERIMENT 3: LIGHT CURVE COMPARISON
 # =============================================================================
-def experiment_light_curves(verbose: bool = True) -> Dict:
+def experiment_light_curves(verbose: bool = True) -> dict:
     """
     Experiment 3: Generate light curves for different Ni-56 masses.
 
@@ -240,7 +234,7 @@ def experiment_light_curves(verbose: bool = True) -> Dict:
 # =============================================================================
 # EXPERIMENT 4: POPULATION SYNTHESIS
 # =============================================================================
-def experiment_population(verbose: bool = True) -> Dict:
+def experiment_population(verbose: bool = True) -> dict:
     """
     Experiment 4: Synthesize a population of SNe Ia from D distribution.
 
@@ -276,7 +270,7 @@ def experiment_population(verbose: bool = True) -> Dict:
 # =============================================================================
 # UNIFIED VISUALIZATION
 # =============================================================================
-def create_unified_figure(exp1: Dict, exp2: Dict, exp3: Dict, exp4: Dict,
+def create_unified_figure(exp1: dict, exp2: dict, exp3: dict, exp4: dict,
                           save_path: str = None):
     """
     Create comprehensive visualization of all experiments.
@@ -456,7 +450,7 @@ def create_unified_figure(exp1: Dict, exp2: Dict, exp3: Dict, exp4: Dict,
                    facecolor='#0d1117')
         print(f"\nSaved: {save_path}")
 
-    plt.show()
+    show_or_close(fig)
 
 
 # =============================================================================
@@ -497,8 +491,8 @@ def run_all_experiments():
     print("|" + " " * 68 + "|")
     print("|  Key findings:                                                     |")
     print(f"|    * lambda_crit = {exp1['lambda_crit_km']:.0f} km (DDT threshold)" + " " * 36 + "|")
-    print(f"|    * D range [2.1, 2.6] -> M_Ni [0.3, 1.1] MSun" + " " * 22 + "|")
-    print(f"|    * Phillips relation DERIVED from turbulence" + " " * 21 + "|")
+    print("|    * D range [2.1, 2.6] -> M_Ni [0.3, 1.1] MSun" + " " * 22 + "|")
+    print("|    * Phillips relation DERIVED from turbulence" + " " * 21 + "|")
     print(f"|    * Intrinsic scatter = {exp4['populations'][1]['scatter']:.3f} mag" + " " * 28 + "|")
     print("|" + " " * 68 + "|")
     print("|  The Spandrel is dead. Long live the Turbulent Cascade.            |")

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Nickel-56 Yield Analysis for Type Ia Supernova Simulation
 
@@ -21,20 +22,16 @@ Reference:
     - Mazzali et al. (2007), Science 315, 825
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 from dataclasses import dataclass
-from typing import Tuple, List
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import matplotlib.pyplot as plt
+import numpy as np
 
-from spandrel.core.constants import M_SUN, DAY, TAU_NI56, TAU_CO56, Q_BURN
-from spandrel.ddt.eos_white_dwarf import eos_from_rho_T
-from spandrel.ddt.flux_hllc import primitive_to_conserved, conserved_to_primitive
-from spandrel.ddt.reaction_carbon import chapman_jouguet_velocity
+from spandrel.core.constants import M_SUN
+from spandrel.ddt.flux_hllc import conserved_to_primitive
 from spandrel.ddt.main_zeldovich import SimulationConfig, ZeldovichDDTSolver
+from spandrel.visuals.utils import show_or_close
 
 # Temperature thresholds for nucleosynthesis
 T_NSE = 5.0e9      # K - Nuclear Statistical Equilibrium (-> Ni-56)
@@ -126,7 +123,7 @@ class NickelYieldAnalyzer:
         M_O = np.sum(dm[mask_O])
         M_C = np.sum(dm[mask_C])
         M_unburned = np.sum(dm[mask_unburned])
-        M_total = np.sum(dm)
+        np.sum(dm)
 
         # Ni-56 production
         # NSE: ~85% goes to Ni-56
@@ -252,7 +249,7 @@ class NickelYieldAnalyzer:
             plt.savefig(save_path, dpi=150)
             print(f"Saved yield plot to {save_path}")
 
-        plt.show()
+        show_or_close(fig)
 
 
 class DDTWithYieldTracking(ZeldovichDDTSolver):
@@ -323,9 +320,9 @@ def run_yield_analysis():
     # For a rough 3D estimate, assume this 1D slice represents
     # a spherical shell of radius R ~ domain_size / 2
     R_shell = config.domain_size / 2
-    M_3D_estimate = 4 * np.pi * R_shell**2 * M_1D  # Very rough!
+    4 * np.pi * R_shell**2 * M_1D  # Very rough!
 
-    print(f"\n1D Column Masses (g/cm^2):")
+    print("\n1D Column Masses (g/cm^2):")
     print(f"  NSE (-> Ni-56):     {result.M_NSE:.3e} g/cm^2")
     print(f"  Si-burning:        {result.M_Si_burn:.3e} g/cm^2")
     print(f"  O-burning:         {result.M_O_burn:.3e} g/cm^2")
@@ -336,7 +333,7 @@ def run_yield_analysis():
     # Mass fractions
     M_total = result.M_NSE + result.M_Si_burn + result.M_O_burn + result.M_C_burn + result.M_unburned
     if M_total > 0:
-        print(f"\nMass Fractions:")
+        print("\nMass Fractions:")
         print(f"  NSE (-> Ni-56):     {100*result.M_NSE/M_total:.1f}%")
         print(f"  Si-burning:        {100*result.M_Si_burn/M_total:.1f}%")
         print(f"  O-burning:         {100*result.M_O_burn/M_total:.1f}%")
@@ -351,25 +348,25 @@ def run_yield_analysis():
     M_WD = 1.4 * M_SUN  # Chandrasekhar mass
     M_Ni56_scaled = f_Ni56 * M_WD
 
-    print(f"\n" + "-" * 70)
+    print("\n" + "-" * 70)
     print("SCALED TO CHANDRASEKHAR MASS WHITE DWARF (1.4 M_sun):")
     print("-" * 70)
     print(f"  Estimated Ni-56 mass: {M_Ni56_scaled/M_SUN:.3f} M_sun")
-    print(f"  Expected for normal SN Ia: 0.4-0.8 M_sun")
+    print("  Expected for normal SN Ia: 0.4-0.8 M_sun")
 
     # Peak luminosity
     L_peak_scaled = 2e43 * (M_Ni56_scaled / M_SUN)
     print(f"\n  Peak luminosity: {L_peak_scaled:.2e} erg/s")
-    print(f"  Expected for normal SN Ia: ~1-2 × 10^4^3 erg/s")
+    print("  Expected for normal SN Ia: ~1-2 × 10^4^3 erg/s")
 
     # Absolute magnitude
     if M_Ni56_scaled > 0:
         M_B = -19.3 - 2.5 * np.log10(M_Ni56_scaled / (0.6 * M_SUN))
         print(f"\n  Peak absolute B magnitude: M_B = {M_B:.2f}")
-        print(f"  Expected for normal SN Ia: M_B ~ -19.3 +/- 0.3")
+        print("  Expected for normal SN Ia: M_B ~ -19.3 +/- 0.3")
 
     # Classification
-    print(f"\n" + "=" * 70)
+    print("\n" + "=" * 70)
     print("SUPERNOVA CLASSIFICATION:")
     print("=" * 70)
 

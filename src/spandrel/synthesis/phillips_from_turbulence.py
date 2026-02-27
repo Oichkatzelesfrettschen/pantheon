@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Phillips Relation from Turbulent Geometry
 
@@ -19,30 +20,16 @@ This module synthesizes all previous physics into a single
 predictive framework for Type Ia supernova diversity.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 from dataclasses import dataclass
-from typing import Tuple, Dict, List
-from scipy.optimize import curve_fit
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import matplotlib.pyplot as plt
+import numpy as np
+
 from spandrel.core.constants import (
-    C_LIGHT_CGS as C_LIGHT,
-    K_BOLTZMANN,
-    M_PROTON,
     M_SUN,
-    DAY,
-    RHO_DDT,
-    R_WD,
-    TAU_NI56,
-    TAU_CO56
 )
-
-sys.path.insert(0, str(Path(__file__).parent))
-
-from turbulent_flame_theory import TurbulentSupernovaModel, FractalFlame
+from spandrel.visuals.utils import show_or_close
 
 
 # =============================================================================
@@ -88,7 +75,7 @@ class PhillipsFromTurbulence:
     This naturally produces the Phillips correlation!
     """
 
-    def __init__(self, D_range: Tuple[float, float] = (2.1, 2.6)):
+    def __init__(self, D_range: tuple[float, float] = (2.1, 2.6)):
         """
         Initialize with range of fractal dimensions to explore.
         """
@@ -173,7 +160,7 @@ class PhillipsFromTurbulence:
         """
         return self.M_B_ref - 2.5 * np.log10(M_Ni / self.M_Ni_ref)
 
-    def compute_phillips_curve(self, n_points: int = 50) -> Dict:
+    def compute_phillips_curve(self, n_points: int = 50) -> dict:
         """
         Generate the full Phillips relation from fractal dimension variation.
 
@@ -192,7 +179,7 @@ class PhillipsFromTurbulence:
             'M_B': M_B_array
         }
 
-    def fit_to_observations(self) -> Dict:
+    def fit_to_observations(self) -> dict:
         """
         Fit the model to observed Phillips relation.
 
@@ -243,7 +230,7 @@ class SNIaPopulationSynthesis:
         self.D_std = D_std
         self.phillips = PhillipsFromTurbulence()
 
-    def sample_population(self, n_sne: int = 1000) -> Dict:
+    def sample_population(self, n_sne: int = 1000) -> dict:
         """
         Generate a synthetic population of SNe Ia.
 
@@ -266,7 +253,7 @@ class SNIaPopulationSynthesis:
             'n_sne': n_sne
         }
 
-    def intrinsic_scatter(self, population: Dict = None) -> Dict:
+    def intrinsic_scatter(self, population: dict = None) -> dict:
         """
         Compute intrinsic scatter in the Phillips relation.
 
@@ -422,7 +409,7 @@ def plot_phillips_derivation(save_path: str = None):
                    facecolor='#0d1117')
         print(f"Saved: {save_path}")
 
-    plt.show()
+    show_or_close(fig)
 
 
 # =============================================================================
@@ -439,7 +426,7 @@ if __name__ == "__main__":
     # Compute model
     model = phillips.compute_phillips_curve()
 
-    print(f"\nModel predictions across D range:")
+    print("\nModel predictions across D range:")
     print(f"{'D':>6} {'M_Ni':>8} {'Δm_1₅':>8} {'M_B':>8}")
     print("-" * 35)
 
@@ -449,7 +436,7 @@ if __name__ == "__main__":
 
     # Fit to observations
     fit = phillips.fit_to_observations()
-    print(f"\nFit to observations:")
+    print("\nFit to observations:")
     print(f"  chi^2 = {fit['chi2']:.1f} ({fit['n_dof']} dof)")
     print(f"  RMS residual = {fit['rms']:.3f} mag")
 
@@ -458,7 +445,7 @@ if __name__ == "__main__":
     pop = pop_model.sample_population(n_sne=1000)
     scatter = pop_model.intrinsic_scatter(pop)
 
-    print(f"\nPopulation synthesis (N=1000):")
+    print("\nPopulation synthesis (N=1000):")
     print(f"  Mean D: {np.mean(pop['D']):.3f} +/- {np.std(pop['D']):.3f}")
     print(f"  Mean M_Ni: {np.mean(pop['M_Ni']):.3f} +/- {np.std(pop['M_Ni']):.3f} MSun")
     print(f"  Mean M_B: {np.mean(pop['M_B']):.2f} +/- {np.std(pop['M_B']):.2f}")

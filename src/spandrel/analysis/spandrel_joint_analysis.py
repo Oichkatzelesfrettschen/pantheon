@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Spandrel Cosmology Joint Analysis
 =================================
@@ -22,22 +23,20 @@ Priors Used:
 Author: Spandrel Cosmology Project
 """
 
+import multiprocessing as mp
+import warnings
+from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize, differential_evolution
+from scipy.optimize import differential_evolution, minimize
 from scipy.stats import chi2, norm
-from scipy.integrate import quad
-from dataclasses import dataclass
-from typing import Tuple, Dict, Optional, List
-from concurrent.futures import ProcessPoolExecutor
-import multiprocessing as mp
-import time
-import warnings
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='numpy')
 
 # Import physical constants from central module
-from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT, H0_FIDUCIAL, H0_PLANCK, H0_SH0ES, OMEGA_M_FIDUCIAL, GAMMA_1, RIEMANN_ZEROS
+from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT
 
 # Number of CPU cores
 NUM_CORES = mp.cpu_count()
@@ -121,7 +120,7 @@ class SpandrelCosmologyEngine:
     def comoving_distance(self, z: np.ndarray, n_steps: int = 500) -> np.ndarray:
         """Vectorized comoving distance calculation."""
         z = np.atleast_1d(z)
-        n_z = len(z)
+        len(z)
 
         # Integration grid
         z_grid = np.linspace(0, z, n_steps).T
@@ -182,7 +181,7 @@ class JointAnalysisFitter:
         self.inv_var = 1.0 / (mu_err ** 2)
 
         # Active priors
-        self.active_priors: List[CosmologicalPrior] = []
+        self.active_priors: list[CosmologicalPrior] = []
 
     def add_prior(self, prior: CosmologicalPrior):
         """Add an external prior to the analysis."""
@@ -231,7 +230,7 @@ class JointAnalysisFitter:
         return chi2_sn + chi2_prior
 
     def fit(self, use_spandrel: bool = True,
-            use_global: bool = True) -> Dict:
+            use_global: bool = True) -> dict:
         """
         Perform joint fit with active priors.
         """
@@ -299,7 +298,7 @@ class JointMCMC:
     """MCMC sampler with external priors."""
 
     def __init__(self, z_obs: np.ndarray, mu_obs: np.ndarray, mu_err: np.ndarray,
-                 priors: List[CosmologicalPrior] = None):
+                 priors: list[CosmologicalPrior] = None):
         self.z_obs = z_obs
         self.mu_obs = mu_obs
         self.mu_err = mu_err
@@ -342,7 +341,7 @@ class JointMCMC:
         return lp + self.log_likelihood(H0, Omega_m, epsilon)
 
     def run_chain(self, n_samples: int, initial: np.ndarray,
-                  proposal_sigma: np.ndarray, seed: int = 42) -> Tuple[np.ndarray, float]:
+                  proposal_sigma: np.ndarray, seed: int = 42) -> tuple[np.ndarray, float]:
         """Run single MCMC chain."""
         np.random.seed(seed)
 
@@ -367,7 +366,7 @@ class JointMCMC:
         return chain, acceptance_rate
 
     def run_parallel(self, n_samples: int = 5000, n_burn: int = 1000,
-                    n_chains: int = 4) -> Dict:
+                    n_chains: int = 4) -> dict:
         """Run parallel MCMC chains."""
         print(f"\n  Running {n_chains} MCMC chains ({n_samples} samples each)...")
 
@@ -449,7 +448,7 @@ class OscillatorySpandrelEngine(SpandrelCosmologyEngine):
 # MAIN JOINT ANALYSIS
 # =============================================================================
 
-def load_pantheon_data(filepath: str = "Pantheon+SH0ES.dat") -> Tuple[np.ndarray, ...]:
+def load_pantheon_data(filepath: str = "Pantheon+SH0ES.dat") -> tuple[np.ndarray, ...]:
     """Load Pantheon+ data."""
     print(f"\nLoading data from {filepath}...")
     df = pd.read_csv(filepath, sep=r'\s+')

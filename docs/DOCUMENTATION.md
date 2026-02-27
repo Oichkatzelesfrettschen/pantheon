@@ -1,7 +1,8 @@
 # The Spandrel Project: Complete Technical Documentation
 
 **Version:** 1.0.0
-**Date:** November 26, 2025
+**Date:** November 26, 2025 (last scientific update)
+**Revised:** February 26, 2026 (debt remediation pass)
 **Status:** COMPLETE
 **Result:** Cosmological hypothesis FALSIFIED; Astrophysical DDT solver VALIDATED
 

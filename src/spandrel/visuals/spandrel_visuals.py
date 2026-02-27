@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Spandrel Project: Final Visualizations
 
@@ -8,12 +9,12 @@ Creates publication-quality figures summarizing the project:
     3. The Project Arc (Theory -> Data -> Physics)
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, Circle
-from matplotlib.lines import Line2D
-import matplotlib.gridspec as gridspec
 from pathlib import Path
+
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import FancyBboxPatch
 
 # Output directory
 OUTPUT_DIR = Path(__file__).parent
@@ -49,7 +50,7 @@ def create_cosmological_veto():
     # --- Panel 1: Equation of State w(z) ---
 
     # LambdaCDM baseline
-    w_LCDM = np.full_like(z, -1.0)
+    np.full_like(z, -1.0)
 
     # DESI CPL fit: w(a) = w0 + wa(1-a)
     w0_desi = -0.827
@@ -241,7 +242,7 @@ def create_zeldovich_triumph():
 
     # Combined legend
     lines = [l1, l2]
-    labels = [l.get_label() for l in lines]
+    labels = [line.get_label() for line in lines]
     ax3.legend(lines, labels, loc='upper right', fontsize=9)
     ax3.grid(True, alpha=0.3)
 

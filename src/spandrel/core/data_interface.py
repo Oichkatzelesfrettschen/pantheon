@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 """Pantheon+SH0ES data interface (compatibility layer).
 
 The canonical implementation lives in `spandrel_core.pantheon`. Pantheon keeps a
@@ -8,7 +9,7 @@ stable while the core logic is promoted into `spandrel-core`.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 import numpy as np
 from spandrel_core.pantheon import DataStats
@@ -23,7 +24,7 @@ __all__ = ["DATA_FILE", "DataStats", "PantheonData", "load_pantheon"]
 class PantheonData(_PantheonData):
     def __init__(
         self,
-        filepath: Optional[Path] = None,
+        filepath: Path | None = None,
         z_min: float = 0.001,
         z_max: float = 2.5,
     ) -> None:
@@ -31,7 +32,7 @@ class PantheonData(_PantheonData):
 
 
 def load_pantheon(
-    filepath: Optional[Path] = None,
+    filepath: Path | None = None,
     *,
     z_min: float = 0.001,
     z_max: float = 2.5,

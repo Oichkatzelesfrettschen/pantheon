@@ -13,26 +13,22 @@ Run with: pytest tests/test_eos.py -v
 
 import numpy as np
 import pytest
-from pathlib import Path
-import sys
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
+from spandrel.core.constants import C_LIGHT_CGS, K_BOLTZMANN, M_ELECTRON, M_PROTON
 from spandrel.ddt.eos_white_dwarf import (
+    EOSState,
+    effective_gamma,
     electron_density,
+    energy_degenerate,
+    eos_from_rho_T,
     fermi_momentum,
-    relativity_parameter,
     pressure_degenerate,
     pressure_ions,
     pressure_radiation,
-    energy_degenerate,
+    relativity_parameter,
     sound_speed,
-    effective_gamma,
-    eos_from_rho_T,
     temperature_from_rho_e,
-    EOSState,
 )
-from spandrel.core.constants import C_LIGHT_CGS, K_BOLTZMANN, M_ELECTRON, M_PROTON
 
 
 class TestElectronDensity:

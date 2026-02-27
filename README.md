@@ -151,7 +151,7 @@ The primary dataset contains 1,701 Type Ia supernovae from 18 surveys, spanning 
 
 ## License
 
-MIT
+GNU General Public License v2.0 only (GPL-2.0-only).
 
 ## Citation
 

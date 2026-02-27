@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Spandrel Cosmology Analysis Framework
 =====================================
@@ -16,20 +17,24 @@ Reference: Scolnic et al. 2022, ApJ 938 113
 Author: Spandrel Cosmology Project
 """
 
-import numpy as np
-import pandas as pd
-from scipy.integrate import quad
-from scipy.optimize import minimize, differential_evolution
-from scipy.stats import chi2
-import matplotlib.pyplot as plt
-from typing import Tuple, Optional, Dict, Any
 import warnings
-warnings.filterwarnings('ignore')
+from typing import Any, Optional
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.integrate import quad
+from scipy.optimize import differential_evolution, minimize
+from scipy.stats import chi2
+
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='numpy')
 from pathlib import Path
 
 # Import physical constants from central module
-from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT, H0_FIDUCIAL, H0_PLANCK, H0_SH0ES, OMEGA_M_FIDUCIAL, GAMMA_1, RIEMANN_ZEROS
+from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT
 from spandrel.core.data_interface import PantheonData
+from spandrel.visuals.utils import show_or_close
+
 try:
     from spandrel_core.cosmology import distance_modulus_lcdm as distance_modulus_lcdm_core
     from spandrel_core.likelihood import chi2_diagonal as chi2_diagonal_core
@@ -79,7 +84,8 @@ class SpandrelCosmology:
 
         D_C(z) = (c/H0) * integral_0ᶻ dz'/E(z')
         """
-        integrand = lambda zp: 1.0 / self.E(zp)
+        def integrand(zp):
+            return 1.0 / self.E(zp)
         result, _ = quad(integrand, 0, z)
         return (C_LIGHT / self.H0) * result
 
@@ -147,7 +153,7 @@ class SpandrelFitter:
         self.chi2_min = None
         self.dof = None
 
-    def chi_squared(self, params: Tuple[float, float, float], use_spandrel: bool = True) -> float:
+    def chi_squared(self, params: tuple[float, float, float], use_spandrel: bool = True) -> float:
         """
         Compute chi-squared statistic for given parameters.
 
@@ -162,10 +168,10 @@ class SpandrelFitter:
         cosmo = SpandrelCosmology(H0=H0, Omega_m=Omega_m, epsilon=epsilon)
         mu_model = cosmo.distance_modulus_array(self.z_obs, use_spandrel=use_spandrel)
 
-        residuals = (self.mu_obs - mu_model) / self.mu_err
+        (self.mu_obs - mu_model) / self.mu_err
         return chi2_diagonal_core(self.mu_obs - mu_model, self.mu_err)
 
-    def fit_lcdm(self, initial_guess: Tuple[float, float] = (70.0, 0.3)) -> Dict[str, Any]:
+    def fit_lcdm(self, initial_guess: tuple[float, float] = (70.0, 0.3)) -> dict[str, Any]:
         """
         Fit standard LambdaCDM (epsilon = 0).
 
@@ -210,8 +216,8 @@ class SpandrelFitter:
 
         return lcdm_result
 
-    def fit_spandrel(self, initial_guess: Tuple[float, float, float] = (70.0, 0.3, 0.0),
-                     use_global: bool = True) -> Dict[str, Any]:
+    def fit_spandrel(self, initial_guess: tuple[float, float, float] = (70.0, 0.3, 0.0),
+                     use_global: bool = True) -> dict[str, Any]:
         """
         Fit Spandrel cosmology with stiffness parameter.
 
@@ -274,8 +280,8 @@ class SpandrelFitter:
 
         return spandrel_result
 
-    def compute_parameter_errors(self, best_params: Tuple[float, float, float],
-                                  delta_chi2: float = 1.0) -> Dict[str, float]:
+    def compute_parameter_errors(self, best_params: tuple[float, float, float],
+                                  delta_chi2: float = 1.0) -> dict[str, float]:
         """
         Estimate parameter uncertainties using delta-chi-squared method.
 
@@ -315,7 +321,7 @@ class SpandrelFitter:
 
         return errors
 
-    def likelihood_ratio_test(self, lcdm_result: Dict, spandrel_result: Dict) -> Dict[str, float]:
+    def likelihood_ratio_test(self, lcdm_result: dict, spandrel_result: dict) -> dict[str, float]:
         """
         Perform likelihood ratio test to assess if Spandrel model is preferred.
 
@@ -352,7 +358,7 @@ class SpandrelVisualizer:
         self.mu_obs = mu_obs
         self.mu_err = mu_err
 
-    def plot_hubble_diagram(self, lcdm_result: Dict, spandrel_result: Dict,
+    def plot_hubble_diagram(self, lcdm_result: dict, spandrel_result: dict,
                             save_path: Optional[str] = None):
         """
         Create the Hubble diagram with both model fits.
@@ -416,9 +422,9 @@ class SpandrelVisualizer:
             plt.savefig(save_path, dpi=150, bbox_inches='tight')
             print(f"Saved Hubble diagram to: {save_path}")
 
-        plt.show()
+        show_or_close(fig)
 
-    def plot_stiffness_effect(self, spandrel_result: Dict, save_path: Optional[str] = None):
+    def plot_stiffness_effect(self, spandrel_result: dict, save_path: Optional[str] = None):
         """
         Visualize the Spandrel stiffness correction as a function of redshift.
         """
@@ -449,9 +455,9 @@ class SpandrelVisualizer:
             plt.savefig(save_path, dpi=150, bbox_inches='tight')
             print(f"Saved stiffness plot to: {save_path}")
 
-        plt.show()
+        show_or_close(fig)
 
-    def plot_chi2_contours(self, fitter: SpandrelFitter, best_params: Tuple[float, float, float],
+    def plot_chi2_contours(self, fitter: SpandrelFitter, best_params: tuple[float, float, float],
                            save_path: Optional[str] = None):
         """
         Plot chi-squared contours in H0-epsilon parameter space.
@@ -494,7 +500,7 @@ class SpandrelVisualizer:
             plt.savefig(save_path, dpi=150, bbox_inches='tight')
             print(f"Saved contour plot to: {save_path}")
 
-        plt.show()
+        show_or_close(fig)
 
 
 def run_full_analysis(data_path: str = "Pantheon+SH0ES.dat"):

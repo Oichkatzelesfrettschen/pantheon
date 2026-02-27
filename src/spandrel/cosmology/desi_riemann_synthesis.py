@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 DESI-Riemann Synthesis: The Grand Unified Dark Energy Test
 ===========================================================
@@ -17,20 +18,24 @@ The Ultimate Question:
 Author: Spandrel Cosmology Project
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
-from matplotlib.colors import LinearSegmentedColormap
-from scipy.stats import chi2
-from scipy.optimize import minimize
-from dataclasses import dataclass
-from typing import Tuple, List, Dict, Optional
 import warnings
+from dataclasses import dataclass
+from typing import Optional
 
-warnings.filterwarnings('ignore')
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Ellipse
+from scipy.optimize import minimize
+
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='numpy')
 
 # Import physical constants from central module
-from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT, H0_FIDUCIAL, H0_PLANCK, H0_SH0ES, OMEGA_M_FIDUCIAL, GAMMA_1, RIEMANN_ZEROS
+from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT
+from spandrel.core.constants import (
+    GAMMA_1,
+)
+from spandrel.visuals.utils import show_or_close
 
 # Our fit results from Pantheon+
 RIEMANN_FIT = {
@@ -122,7 +127,7 @@ class RiemannEoS:
         z = np.atleast_1d(z)
         return -1.0 - (self.A * self.gamma / 3.0) * np.sin(self.gamma * np.log(1 + z) + self.phi)
 
-    def effective_w0_wa(self) -> Tuple[float, float]:
+    def effective_w0_wa(self) -> tuple[float, float]:
         """
         Compute effective CPL parameters (w_0, wₐ) by matching at z=0 and z=0.5.
 
@@ -144,7 +149,7 @@ class RiemannEoS:
 
         return w0, wa
 
-    def effective_w0_wa_fitted(self) -> Tuple[float, float]:
+    def effective_w0_wa_fitted(self) -> tuple[float, float]:
         """
         Fit CPL parameters by minimizing deviation over 0 < z < 2.
         """
@@ -359,7 +364,7 @@ def plot_w0_wa_plane(riemann_eos: RiemannEoS, save_path: Optional[str] = None):
     fig, ax = plt.subplots(figsize=(12, 10))
 
     # Plot survey constraint ellipses
-    for name, constraint in SURVEY_CONSTRAINTS.items():
+    for _name, constraint in SURVEY_CONSTRAINTS.items():
         # Covariance matrix from errors and correlation
         cov = np.array([
             [constraint.w0_err**2, constraint.correlation * constraint.w0_err * constraint.wa_err],
@@ -433,7 +438,7 @@ def plot_w0_wa_plane(riemann_eos: RiemannEoS, save_path: Optional[str] = None):
         plt.savefig(save_path, dpi=150)
         print(f"Saved w_0-wₐ plot to: {save_path}")
 
-    plt.show()
+    show_or_close(fig)
     return w0_fit, wa_fit
 
 
@@ -497,7 +502,7 @@ def plot_w_z_evolution(riemann_eos: RiemannEoS, save_path: Optional[str] = None)
         plt.savefig(save_path, dpi=150)
         print(f"Saved w(z) evolution to: {save_path}")
 
-    plt.show()
+    show_or_close(fig)
 
 
 def plot_high_z_synthesis(save_path: Optional[str] = None):
@@ -612,7 +617,7 @@ def plot_high_z_synthesis(save_path: Optional[str] = None):
         plt.savefig(save_path, dpi=150)
         print(f"Saved high-z synthesis to: {save_path}")
 
-    plt.show()
+    show_or_close(fig)
 
 
 def compute_chi2_comparison():

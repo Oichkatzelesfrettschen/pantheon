@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Elevated Cosmological Model Comparison
 
@@ -12,16 +13,15 @@ This elevates the original falsification from chi^2 comparison to
 full Bayesian evidence ratios (Bayes factors).
 """
 
-import numpy as np
-from dataclasses import dataclass
-from typing import Dict, List, Tuple, Callable
-from concurrent.futures import ProcessPoolExecutor
 import warnings
-warnings.filterwarnings('ignore')
+from dataclasses import dataclass
 
-import sys
-sys.path.insert(0, '..')
-from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT, H0_FIDUCIAL
+import numpy as np
+
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='numpy')
+
+from spandrel.core.constants import C_LIGHT_KMS as C_LIGHT
 
 
 # =============================================================================
@@ -32,8 +32,8 @@ class CosmologicalModel:
     """Base class for cosmological models."""
     name: str
     n_params: int
-    param_names: List[str]
-    param_bounds: List[Tuple[float, float]]
+    param_names: list[str]
+    param_bounds: list[tuple[float, float]]
 
     def w(self, z: np.ndarray, params: np.ndarray) -> np.ndarray:
         """Dark energy equation of state."""
@@ -132,7 +132,7 @@ class RiemannResonance(CosmologicalModel):
 
         # Numerical integration for general w(z)
         n_steps = 100
-        z_grid = np.linspace(0, z.max(), n_steps)
+        np.linspace(0, z.max(), n_steps)
 
         E_values = np.zeros_like(z)
         for i, zi in enumerate(z):
@@ -167,7 +167,7 @@ class NestedSampler:
         5. Repeat until convergence
     """
 
-    def __init__(self, model: CosmologicalModel, data: Dict,
+    def __init__(self, model: CosmologicalModel, data: dict,
                  n_live: int = 400, max_iter: int = 10000):
         self.model = model
         self.data = data
@@ -188,7 +188,7 @@ class NestedSampler:
         mu_err = self.data['mu_err']
 
         H0 = params[0]
-        E_z = self.model.E(z, params)
+        self.model.E(z, params)
 
         # Comoving distance
         n_steps = 100
@@ -207,7 +207,7 @@ class NestedSampler:
 
         return -0.5 * chi2
 
-    def run(self) -> Dict:
+    def run(self) -> dict:
         """Run nested sampling."""
         n_params = self.model.n_params
 
@@ -225,7 +225,7 @@ class NestedSampler:
         log_vol = 0.0  # log(prior volume)
         log_evidence = -np.inf
 
-        for iteration in range(self.max_iter):
+        for iteration in range(self.max_iter):  # noqa: B007 -- used in return dict
             # Find worst point
             worst_idx = np.argmin(live_logl)
             worst_logl = live_logl[worst_idx]
@@ -295,7 +295,7 @@ class NestedSampler:
 # =============================================================================
 # MODEL COMPARISON
 # =============================================================================
-def compute_bayes_factors(results: Dict[str, Dict], reference: str = "LambdaCDM") -> Dict:
+def compute_bayes_factors(results: dict[str, dict], reference: str = "LambdaCDM") -> dict:
     """Compute Bayes factors relative to reference model."""
     log_Z_ref = results[reference]['log_evidence']
 
@@ -327,7 +327,7 @@ def interpret_bayes_factor(log_K: float) -> str:
         return "Strong evidence AGAINST"
 
 
-def compute_information_criteria(results: Dict[str, Dict], n_data: int) -> Dict:
+def compute_information_criteria(results: dict[str, dict], n_data: int) -> dict:
     """Compute AIC, BIC, DIC for model comparison."""
     criteria = {}
 
@@ -358,7 +358,7 @@ def compute_information_criteria(results: Dict[str, Dict], n_data: int) -> Dict:
 # =============================================================================
 # MAIN ANALYSIS
 # =============================================================================
-def run_full_model_comparison(data_path: str = None) -> Dict:
+def run_full_model_comparison(data_path: str = None) -> dict:
     """
     Run complete Bayesian model comparison.
 
@@ -465,15 +465,15 @@ def run_full_model_comparison(data_path: str = None) -> Dict:
     riemann_bf = bayes_factors['Riemann gamma_1']
 
     print(f"\nBest model by Bayesian evidence: {best_model}")
-    print(f"\nRiemann Resonance status:")
+    print("\nRiemann Resonance status:")
     print(f"  Bayes factor vs LambdaCDM: K = {riemann_bf['K']:.2e}")
     print(f"  Interpretation: {riemann_bf['interpretation']}")
 
     if riemann_bf['log_K'] < -2.3:
-        print(f"\n  +==============================================+")
-        print(f"  |  RIEMANN RESONANCE: DECISIVELY RULED OUT     |")
-        print(f"  |  by Bayesian model comparison                |")
-        print(f"  +==============================================+")
+        print("\n  +==============================================+")
+        print("  |  RIEMANN RESONANCE: DECISIVELY RULED OUT     |")
+        print("  |  by Bayesian model comparison                |")
+        print("  +==============================================+")
 
     return {
         'results': results,

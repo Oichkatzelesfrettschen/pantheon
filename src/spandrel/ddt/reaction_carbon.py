@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Nuclear Reaction Network for Type Ia Supernovae
 
@@ -16,17 +17,11 @@ Reference:
     - Timmes & Woosley (1992), ApJ 396, 649
 """
 
+
 import numpy as np
-from typing import Tuple
-import sys
-from spandrel.core.constants import (
-    K_BOLTZMANN,
-    M_PROTON,
-    Q_BURN,
-    A_BAR,
-    Z_BAR,
-    Y_E
-)
+
+from spandrel.core.constants import K_BOLTZMANN, M_PROTON, Q_BURN
+
 from .accelerators import cpu_jit
 
 # Additional constants not in central module
@@ -55,7 +50,7 @@ def screening_factor(rho: np.ndarray, T: np.ndarray) -> np.ndarray:
     """
     # Electron density
     Y_e = 0.5  # For C12
-    n_e = Y_e * rho / M_PROTON
+    Y_e * rho / M_PROTON
 
     # Debye-Hückel screening length
     # lambda_D = sqrt(k_B T / (4pi e^2 n_e))
@@ -67,7 +62,12 @@ def screening_factor(rho: np.ndarray, T: np.ndarray) -> np.ndarray:
     # At DDT conditions, screening is typically ~10-30% enhancement
 
     # Simplified formula (Graboske)
-    T9 = T / 1e9
+    # WHY: T9**3 appears in the denominator of the screening parameter H.
+    # Without a temperature floor, T -> 0 causes division by zero and the
+    # exponent diverges (T^(-3/2) -> inf). Physically, screening is only
+    # relevant at T > 1e7 K where thermonuclear reactions are active; below
+    # this floor the rate is negligibly small regardless of screening.
+    T9 = np.maximum(T, 1e7) / 1e9  # floor at 10 MK to prevent T^(-3/2) overflow
     rho_6 = rho / 1e6
 
     # H ~ 0.188 * Z1 * Z2 * sqrt(rho/T^3) for pure compositions
@@ -104,15 +104,14 @@ def c12_c12_rate(T: np.ndarray) -> np.ndarray:
 
     # CF88 fit (valid 0.5 < T9 < 10)
     T9_13 = T9**(1.0/3.0)
-    T9_23 = T9**(2.0/3.0)
-    T9_53 = T9**(5.0/3.0)
+    T9**(2.0/3.0)
+    T9**(5.0/3.0)
 
     # Rate coefficient (cm^3/mol/s)
     # Using modified fit for numerical stability
-    tau = 84.165 / T9_13  # Gamow factor tau = 3(E_G/kT)^(1/3)
+    84.165 / T9_13  # Gamow factor tau = 3(E_G/kT)^(1/3)
 
     # S-factor extrapolation (MeV-barn)
-    S_eff = 3.0e16  # Effective S-factor
 
     # Rate: N_A <sigmav> = C * T9^(-2/3) * exp(-tau)
     # where C includes S-factor and constants
@@ -132,7 +131,7 @@ def c12_c12_rate(T: np.ndarray) -> np.ndarray:
 
 
 @cpu_jit
-def reaction_rate_c12(rho: np.ndarray, T: np.ndarray, X_C12: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def reaction_rate_c12(rho: np.ndarray, T: np.ndarray, X_C12: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Compute C12 burning rate and energy generation.
 
@@ -179,7 +178,7 @@ def reaction_rate_c12(rho: np.ndarray, T: np.ndarray, X_C12: np.ndarray) -> Tupl
 
 @cpu_jit
 def burn_substep(rho: np.ndarray, e_int: np.ndarray, X_C12: np.ndarray,
-                 T: np.ndarray, dt: float, method: str = 'backward_euler') -> Tuple[np.ndarray, np.ndarray]:
+                 T: np.ndarray, dt: float, method: str = 'backward_euler') -> tuple[np.ndarray, np.ndarray]:
     """
     Integrate the nuclear burning for one substep.
 
@@ -241,7 +240,7 @@ def burn_substep(rho: np.ndarray, e_int: np.ndarray, X_C12: np.ndarray,
 @cpu_jit
 def burn_step_subcycled(rho: np.ndarray, e_int: np.ndarray, X_C12: np.ndarray,
                         T: np.ndarray, dt_hydro: float,
-                        max_dX: float = 0.1, max_subcycles: int = 1000) -> Tuple[np.ndarray, np.ndarray]:
+                        max_dX: float = 0.1, max_subcycles: int = 1000) -> tuple[np.ndarray, np.ndarray]:
     """
     Integrate burning with adaptive subcycling.
 

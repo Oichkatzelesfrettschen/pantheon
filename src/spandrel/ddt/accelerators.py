@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Accelerator definitions for Spandrel DDT solver.
 
@@ -10,7 +11,6 @@ Target Architectures:
     - GPU: CUDA 12 (SM89) via Numba CUDA
 """
 
-import warnings
 import os
 
 # Configuration
@@ -24,8 +24,8 @@ try:
     if not ENABLE_JIT:
         raise ImportError("JIT disabled by configuration")
 
-    from numba import jit, njit, prange, float64, int32, void
-    
+    from numba import float64, int32, jit, njit, prange, void  # noqa: F401
+
     # Standard CPU JIT configuration
     # fastmath=True allows reordering of FP operations (SIMD friendly)
     # cache=True speeds up subsequent launches
@@ -47,7 +47,7 @@ except ImportError:
     def cpu_jit(func):
         """No-op decorator (standard Python execution)."""
         return func
-        
+
     def prange(*args):
         """Fallback for parallel range."""
         return range(*args)
@@ -62,7 +62,7 @@ try:
         raise ImportError("CUDA disabled by configuration")
 
     from numba import cuda
-    
+
     if not cuda.is_available():
         raise ImportError("CUDA driver not detected")
 

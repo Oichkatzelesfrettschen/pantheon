@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 DDT Parameter Study: Systematic Exploration of Detonation Conditions
 
@@ -17,19 +18,19 @@ Scientific questions:
     - What determines the transition from subluminous to overluminous SNe?
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
+import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional
-import sys
 from pathlib import Path
-import warnings
-warnings.filterwarnings('ignore')
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from spandrel.core.constants import M_SUN
+import matplotlib.pyplot as plt
+import numpy as np
+
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='scipy')
+warnings.filterwarnings('ignore', category=RuntimeWarning, module='numpy')
+
 from spandrel.ddt.main_zeldovich import SimulationConfig, ZeldovichDDTSolver
+from spandrel.visuals.utils import show_or_close
 
 
 # =============================================================================
@@ -92,7 +93,7 @@ def run_single_simulation(params: ParameterPoint, t_end: float = 0.01,
     # Suppress plotting
     try:
         solver.run(show_plots=False)
-    except Exception as e:
+    except Exception:
         # Handle numerical failures gracefully
         return SimulationResult(
             params=params,
@@ -140,11 +141,11 @@ class DDTParameterStudy:
     """
 
     def __init__(self):
-        self.results: List[SimulationResult] = []
+        self.results: list[SimulationResult] = []
 
     def scan_gradient_width(self, widths: np.ndarray,
                             rho: float = 2e7, T_hot: float = 3e9,
-                            parallel: bool = True) -> List[SimulationResult]:
+                            parallel: bool = True) -> list[SimulationResult]:
         """
         Scan gradient width at fixed density and temperature.
 
@@ -205,8 +206,8 @@ class DDTParameterStudy:
 
         return detonation_grid, Ni56_grid
 
-    def _run_batch(self, params_list: List[ParameterPoint],
-                   parallel: bool = True) -> List[SimulationResult]:
+    def _run_batch(self, params_list: list[ParameterPoint],
+                   parallel: bool = True) -> list[SimulationResult]:
         """Run a batch of simulations."""
         results = []
 
@@ -239,7 +240,7 @@ class DDTParameterStudy:
 # =============================================================================
 # VISUALIZATION
 # =============================================================================
-def plot_gradient_scan(results: List[SimulationResult], save_path: str = None):
+def plot_gradient_scan(results: list[SimulationResult], save_path: str = None):
     """Plot results from gradient width scan."""
     plt.style.use('dark_background')
     fig, axes = plt.subplots(2, 2, figsize=(12, 10))
@@ -320,7 +321,7 @@ def plot_gradient_scan(results: List[SimulationResult], save_path: str = None):
                    facecolor='#0d1117')
         print(f"Saved: {save_path}")
 
-    plt.show()
+    show_or_close(fig)
 
 
 def plot_2d_phase_diagram(gradient_widths: np.ndarray, densities: np.ndarray,
@@ -372,7 +373,7 @@ def plot_2d_phase_diagram(gradient_widths: np.ndarray, densities: np.ndarray,
                    facecolor='#0d1117')
         print(f"Saved: {save_path}")
 
-    plt.show()
+    show_or_close(fig)
 
 
 # =============================================================================
@@ -427,13 +428,13 @@ def run_parameter_study():
         lambda_crit = (min(r.params.gradient_width for r in ddt_results) +
                       max(r.params.gradient_width for r in no_ddt_results)) / 2
         print(f"\nCritical gradient length: lambda_crit ~ {lambda_crit/1e5:.0f} km")
-        print(f"  (Below this: no DDT)")
-        print(f"  (Above this: successful detonation)")
+        print("  (Below this: no DDT)")
+        print("  (Above this: successful detonation)")
 
     # Best case
     if ddt_results:
         best = max(ddt_results, key=lambda r: r.Ni56_fraction)
-        print(f"\nOptimal configuration:")
+        print("\nOptimal configuration:")
         print(f"  Gradient width: {best.params.gradient_width/1e5:.0f} km")
         print(f"  Shock velocity: {best.shock_velocity:.2e} cm/s")
         print(f"  Ni-56 fraction: {best.Ni56_fraction*100:.0f}%")

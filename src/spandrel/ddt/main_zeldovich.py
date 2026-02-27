@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Zel'dovich Gradient Mechanism DDT Simulation
 
@@ -29,27 +30,21 @@ Output:
     - Detection of detonation (shock velocity > sound speed)
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 from dataclasses import dataclass
-from typing import Optional, Tuple
-import sys
 from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import matplotlib.pyplot as plt
+import numpy as np
 
-from spandrel.core.constants import K_BOLTZMANN, M_PROTON, Q_BURN
-from spandrel.ddt.eos_white_dwarf import (
-    eos_from_rho_T, eos_from_rho_e, temperature_from_rho_e
-)
+from spandrel.ddt.eos_white_dwarf import eos_from_rho_e, eos_from_rho_T
 from spandrel.ddt.flux_hllc import (
-    compute_hllc_update, compute_cfl_timestep,
-    conserved_to_primitive, primitive_to_conserved
+    compute_cfl_timestep,
+    compute_hllc_update,
+    conserved_to_primitive,
+    primitive_to_conserved,
 )
-from spandrel.ddt.reaction_carbon import (
-    burn_step_subcycled, chapman_jouguet_velocity
-)
+from spandrel.ddt.reaction_carbon import burn_step_subcycled, chapman_jouguet_velocity
+from spandrel.visuals.utils import show_or_close
 
 
 @dataclass
@@ -348,7 +343,7 @@ class ZeldovichDDTSolver:
             plt.ioff()
             self._plot_state(fig, axes)
             plt.savefig(Path(__file__).parent / 'ddt_result.png', dpi=150)
-            plt.show()
+            show_or_close(fig)
 
         # Final summary
         if cfg.verbose:

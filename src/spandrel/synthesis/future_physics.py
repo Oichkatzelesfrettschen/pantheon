@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
 """
 Future Physics: The Standard Bomb Tolerance & Gravitational Waves
 
@@ -17,26 +18,16 @@ Reference:
     - Röpke et al. (2007), ApJ 668, 1103 (3D DDT simulations)
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 from dataclasses import dataclass
-from typing import Dict, Tuple, List
-from scipy.integrate import odeint
-from scipy.optimize import brentq
-import sys
-sys.path.insert(0, '..')
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+from spandrel.core.constants import C_LIGHT_CGS as C_LIGHT
 from spandrel.core.constants import (
-    C_LIGHT_CGS as C_LIGHT,
-    K_BOLTZMANN,
-    M_PROTON,
     M_SUN,
-    DAY,
-    RHO_DDT,
-    R_WD,
-    TAU_NI56,
-    TAU_CO56
 )
+from spandrel.visuals.utils import show_or_close
 
 # Module-specific physical constants
 G = 6.674e-8           # cm^3/g/s^2
@@ -162,7 +153,7 @@ class WhiteDwarfStructure:
         return D_Kolmogorov + delta_D_intermittency
 
 
-def analyze_standard_bomb_tolerance() -> Dict:
+def analyze_standard_bomb_tolerance() -> dict:
     """
     Investigate why sigma_D is so small.
 
@@ -205,11 +196,11 @@ def analyze_standard_bomb_tolerance() -> Dict:
     print(f"Central density range: {results[0]['rho_c']:.2e} - {results[-1]['rho_c']:.2e} g/cm^3")
     print(f"Convective velocity range: {results[0]['v_conv']/1e5:.0f} - {results[-1]['v_conv']/1e5:.0f} km/s")
     print(f"\nFractal dimension: D = {D_mean:.4f} +/- {D_std:.4f}")
-    print(f"\nTHIS IS WHY sigma_D IS SMALL:")
-    print(f"  -> Chandrasekhar mass is a FIXED POINT of stellar evolution")
-    print(f"  -> All progenitors converge to M ~ 1.4 MSun before ignition")
-    print(f"  -> Central conditions (rho, T, v_conv) have minimal spread")
-    print(f"  -> Turbulence properties (Re, D) are tightly constrained")
+    print("\nTHIS IS WHY sigma_D IS SMALL:")
+    print("  -> Chandrasekhar mass is a FIXED POINT of stellar evolution")
+    print("  -> All progenitors converge to M ~ 1.4 MSun before ignition")
+    print("  -> Central conditions (rho, T, v_conv) have minimal spread")
+    print("  -> Turbulence properties (Re, D) are tightly constrained")
 
     return {
         'results': results,
@@ -280,7 +271,7 @@ class GravitationalWaveSignature:
         h = (G / C_LIGHT**4) * self.Q_ij * omega**2 / self.distance
         return h
 
-    def lisa_detectability(self) -> Dict:
+    def lisa_detectability(self) -> dict:
         """
         Assess detectability with LISA.
 
@@ -292,7 +283,6 @@ class GravitationalWaveSignature:
         """
         # LISA best sensitivity
         h_lisa = 1e-21
-        f_lisa = 0.01  # Hz
 
         # SN Ia rate: ~1 per century per galaxy
         # Within LISA range (10 Mpc): ~100 galaxies -> ~1/year
@@ -312,7 +302,7 @@ class GravitationalWaveSignature:
         }
 
 
-def analyze_gw_signature() -> Dict:
+def analyze_gw_signature() -> dict:
     """
     Compute GW signatures for different fractal dimensions.
     """
@@ -334,7 +324,7 @@ def analyze_gw_signature() -> Dict:
 
     # Summary
     h_range = [r['h_strain'] for r in results]
-    print(f"\nFractal dimension range: D in [2.1, 2.6]")
+    print("\nFractal dimension range: D in [2.1, 2.6]")
     print(f"Asymmetry range: epsilon in [{results[0]['asymmetry']:.3f}, {results[-1]['asymmetry']:.3f}]")
     print(f"GW strain range: h in [{min(h_range):.2e}, {max(h_range):.2e}]")
     print(f"Characteristic frequency: f ~ {results[0]['f_gw']:.0f} Hz")
@@ -343,16 +333,16 @@ def analyze_gw_signature() -> Dict:
     gw_nominal = GravitationalWaveSignature(D_fractal=2.35)
     lisa = gw_nominal.lisa_detectability()
 
-    print(f"\nLISA Detectability:")
+    print("\nLISA Detectability:")
     print(f"  Single event strain: h = {lisa['h_single']:.2e}")
     print(f"  LISA sensitivity: h = {lisa['h_lisa']:.2e}")
     print(f"  Ratio: {lisa['h_single']/lisa['h_lisa']:.2e}")
     print(f"  Status: {lisa['note']}")
 
-    print(f"\nPREDICTION FOR LISA:")
-    print(f"  -> High-D supernovae (D > 2.5) produce 4× stronger GW than low-D")
-    print(f"  -> Stochastic background may correlate with SN Ia population statistics")
-    print(f"  -> LISA (2030s) could constrain D distribution independently")
+    print("\nPREDICTION FOR LISA:")
+    print("  -> High-D supernovae (D > 2.5) produce 4× stronger GW than low-D")
+    print("  -> Stochastic background may correlate with SN Ia population statistics")
+    print("  -> LISA (2030s) could constrain D distribution independently")
 
     return {'results': results, 'lisa': lisa}
 
@@ -396,7 +386,7 @@ class LESSpecification:
     time_integrator: str = "rk3"
     flux_scheme: str = "ppm"  # Piecewise Parabolic Method
 
-    def estimate_cost(self) -> Dict:
+    def estimate_cost(self) -> dict:
         """
         Estimate computational cost.
         """
@@ -431,7 +421,7 @@ class LESSpecification:
             'cost_estimate': gpu_hours * 2.0  # ~$2/GPU-hour
         }
 
-    def observables(self) -> List[str]:
+    def observables(self) -> list[str]:
         """
         Key observables to extract from 3D simulation.
         """
@@ -446,7 +436,7 @@ class LESSpecification:
         ]
 
 
-def create_les_specification() -> Dict:
+def create_les_specification() -> dict:
     """
     Create detailed specification for 3D LES.
     """
@@ -461,27 +451,27 @@ def create_les_specification() -> Dict:
     print(f"Domain: {spec.domain_size/1e8:.0f} × 10⁸ cm (full star)")
     print(f"Timesteps: {cost['n_steps']:.2e} (dt = {cost['dt']:.2e} s)")
 
-    print(f"\nPhysics:")
+    print("\nPhysics:")
     print(f"  Nuclear network: {'Yes (alpha-chain)' if spec.include_nuclear else 'No'}")
     print(f"  Self-gravity: {'Yes' if spec.include_gravity else 'No'}")
     print(f"  Subgrid model: {spec.subgrid_model}")
     print(f"  Flame tracking: {spec.flame_model}")
 
-    print(f"\nComputational Cost:")
+    print("\nComputational Cost:")
     print(f"  Total FLOPS: {cost['total_flops']:.2e}")
     print(f"  GPU-hours (A100): {cost['gpu_hours']:.0f}")
     print(f"  GPU-days: {cost['gpu_days']:.1f}")
     print(f"  Estimated cost: ${cost['cost_estimate']:.0f}")
 
-    print(f"\nKey Observables:")
+    print("\nKey Observables:")
     for obs in spec.observables():
         print(f"  * {obs}")
 
-    print(f"\nSCIENTIFIC GOAL:")
-    print(f"  -> Measure D_fractal directly from 3D flame surface")
-    print(f"  -> Determine RT vs KH contribution to wrinkling")
-    print(f"  -> Validate 1D parameterization (this work)")
-    print(f"  -> Connect to GW observables")
+    print("\nSCIENTIFIC GOAL:")
+    print("  -> Measure D_fractal directly from 3D flame surface")
+    print("  -> Determine RT vs KH contribution to wrinkling")
+    print("  -> Validate 1D parameterization (this work)")
+    print("  -> Connect to GW observables")
 
     return {
         'specification': spec,
@@ -493,7 +483,7 @@ def create_les_specification() -> Dict:
 # =============================================================================
 # UNIFIED VISUALIZATION
 # =============================================================================
-def create_future_physics_figure(bomb: Dict, gw: Dict, les: Dict,
+def create_future_physics_figure(bomb: dict, gw: dict, les: dict,
                                   save_path: str = None):
     """
     Visualize all future physics predictions.
@@ -520,7 +510,7 @@ def create_future_physics_figure(bomb: Dict, gw: Dict, les: Dict,
     h_gw = [r['h_strain'] for r in gw['results']]
     ax2.semilogy(D_gw, h_gw, 'orange', linewidth=2)
     ax2.axhline(gw['lisa']['h_lisa'], color='red', linestyle='--',
-                label=f'LISA sensitivity', alpha=0.7)
+                label='LISA sensitivity', alpha=0.7)
     ax2.set_xlabel('Fractal Dimension D')
     ax2.set_ylabel('GW Strain h')
     ax2.set_title('Gravitational Wave Signature')
@@ -532,7 +522,7 @@ def create_future_physics_figure(bomb: Dict, gw: Dict, les: Dict,
     modes = ['RT\n(Buoyancy)', 'KH\n(Shear)', 'RM\n(Shock)', 'Observed']
     D_modes = [2.5, 2.3, 2.2, 2.35]
     colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24']
-    bars = ax3.bar(modes, D_modes, color=colors, alpha=0.8)
+    ax3.bar(modes, D_modes, color=colors, alpha=0.8)
     ax3.axhline(2.35, color='white', linestyle=':', alpha=0.5)
     ax3.set_ylabel('Fractal Dimension D')
     ax3.set_title('Instability Mode -> Fractal D\n(Target for 3D LES)')
@@ -561,7 +551,7 @@ def create_future_physics_figure(bomb: Dict, gw: Dict, les: Dict,
         plt.savefig(save_path, dpi=150, bbox_inches='tight', facecolor='#0d1117')
         print(f"\nSaved: {save_path}")
 
-    plt.show()
+    show_or_close(fig)
 
 
 # =============================================================================
