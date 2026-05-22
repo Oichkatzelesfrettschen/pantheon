@@ -27,7 +27,7 @@ SCRUB_MAP = {
 
 def scrub_file(filepath):
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, encoding='utf-8') as f:
             content = f.read()
         
         new_content = content

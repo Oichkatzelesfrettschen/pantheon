@@ -25,12 +25,13 @@ Author: Spandrel Cosmology Project
 Date: November 2025
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from dataclasses import dataclass
-from typing import Tuple, Optional, Callable
 import warnings
+from dataclasses import dataclass
+from typing import Callable, Optional, Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.animation import FuncAnimation
 
 # Optional numba acceleration
 try:
